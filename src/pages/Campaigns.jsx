@@ -34,7 +34,7 @@ const Campaigns = () => {
   };
 
   return (
-    <div className="bg-white" style={{ fontFamily: 'Inter, "Helvetica Neue", sans-serif' }}>
+    <div style={{ background: '#f5f5f7', fontFamily: 'Inter, "Helvetica Neue", sans-serif' }}>
       <div className="border-b border-gray-100">
         <div className="mx-auto w-full max-w-6xl px-6 py-14">
           <motion.div

@@ -43,7 +43,7 @@ const About = () => {
   ];
 
   return (
-    <div style={{ background: '#ffffff', color: '#111827', fontFamily: "'Inter', 'Helvetica Neue', sans-serif", padding: '64px 20px 88px' }}>
+    <div style={{ background: '#f5f5f7', color: '#111827', fontFamily: "'Inter', 'Helvetica Neue', sans-serif", padding: '64px 20px 88px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ ...cardBaseStyle, textAlign: 'center', marginBottom: '48px' }}>
           <div style={{ width: '88px', height: '88px', margin: '0 auto 20px', borderRadius: '16px', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.06)' }}>

@@ -1,109 +1,155 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-/**
- * MinimalTabSwitcher - kyu-core style navigation
- * Replaces traditional navbar with clean tab interface
- */
+const TAB_CONFIG = [
+  { key: 'home', label: 'Home', route: '/' },
+  { key: 'campaigns', label: 'Campaigns', route: '/campaigns' },
+  { key: 'donate', label: 'Donate', route: '/donate' },
+  { key: 'mywallet', label: 'Mywallet', route: '/my-wallet' },
+  { key: 'history', label: 'History', route: '/history' },
+];
+
 const MinimalTabSwitcher = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('home');
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const buttonRef = useRef(null);
+  const panelRef = useRef(null);
 
-  // Map routes to tabs
-  const tabMap = {
-    '/': 'home',
-    '/campaigns': 'product',
-    '/donate': 'product',
-    '/explorer': 'product',
-    '/my-wallet': 'product',
-    '/history': 'product',
-    '/about': 'product',
-    '/demo': 'product',
-    '/success': 'product',
-  };
-
-  // Update active tab based on current route
   useEffect(() => {
-    const tab = tabMap[location.pathname] || 'home';
-    setActiveTab(tab);
+    const current = TAB_CONFIG.find((tab) => tab.route === location.pathname);
+    setActiveTab(current ? current.key : 'home');
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!isPanelOpen) return;
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsPanelOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isPanelOpen]);
+
   const handleTabClick = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'home') {
-      navigate('/');
-    } else {
-      navigate('/campaigns');
-    }
+    setActiveTab(tab.key);
+    navigate(tab.route);
+    setIsPanelOpen(false);
   };
 
-  const tabs = [
-    { key: 'home', label: 'home' },
-    { key: 'product', label: 'product' },
-  ];
-
   return (
-    <div
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        display: 'flex',
-        justifyContent: 'center',
-        background: 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        padding: '24px 20px',
-        borderBottom: '1px solid rgba(243, 244, 246, 0.8)',
-      }}
-    >
-      <div
+    <>
+      <button
+        ref={buttonRef}
+        aria-label="Open navigation switcher"
+        onClick={() => setIsPanelOpen((open) => !open)}
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          background: '#f3f4f6',
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          zIndex: 100,
+          width: '48px',
+          height: '48px',
           borderRadius: '9999px',
-          padding: '4px',
-          fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+          border: '1px solid rgba(226, 232, 240, 0.9)',
+          background: '#ffffff',
+          color: '#111827',
+          fontSize: '1.5rem',
+          fontWeight: 500,
+          cursor: 'pointer',
+          boxShadow: '0 12px 30px rgba(15, 23, 42, 0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 200ms ease, box-shadow 200ms ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 14px 34px rgba(15, 23, 42, 0.2)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 12px 30px rgba(15, 23, 42, 0.15)';
         }}
       >
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => handleTabClick(tab.key)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '9999px',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 200ms ease',
-                background: isActive ? '#ffffff' : 'transparent',
-                color: isActive ? '#111827' : '#6b7280',
-                boxShadow: isActive ? '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)' : 'none',
-              }}
-              onMouseOver={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.color = '#374151';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.color = '#6b7280';
-                }
-              }}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+        ⋯
+      </button>
+
+      {isPanelOpen && (
+        <div
+          ref={panelRef}
+          style={{
+            position: 'fixed',
+            top: '72px',
+            right: '16px',
+            zIndex: 90,
+            width: '220px',
+            padding: '16px',
+            borderRadius: '20px',
+            background: 'rgba(255, 255, 255, 0.96)',
+            border: '1px solid rgba(226, 232, 240, 0.9)',
+            boxShadow: '0 20px 45px rgba(15, 23, 42, 0.18)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+          }}
+        >
+          {TAB_CONFIG.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => handleTabClick(tab)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: isActive ? '#ffffff' : 'rgba(255,255,255,0.2)',
+                  color: isActive ? '#111827' : '#6b7280',
+                  boxShadow: isActive
+                    ? '0 12px 22px rgba(15, 23, 42, 0.2)'
+                    : 'inset 0 0 0 1px rgba(229, 231, 235, 0.9)',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  textTransform: 'capitalize',
+                  transition: 'all 180ms ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.35)';
+                    e.currentTarget.style.color = '#374151';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+                    e.currentTarget.style.color = '#6b7280';
+                  }
+                }}
+              >
+                {tab.label}
+                {isActive ? '•' : ''}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 };
 

@@ -11,6 +11,8 @@ import Explorer from './pages/Explorer';
 import MyWallet from './pages/MyWallet';
 import About from './pages/About';
 import Demo from './pages/Demo';
+import Product from './pages/Product';
+import Contact from './pages/Contact';
 import './styles/globals.css';
 
 // Scroll to top on route change
@@ -33,12 +35,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/products" element={<Product />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/success" element={<Success />} />
           <Route path="/history" element={<History />} />
           <Route path="/explorer" element={<Explorer />} />
           <Route path="/my-wallet" element={<MyWallet />} />
-          <Route path="/about" element={<About />} />
           <Route path="/demo" element={<Demo />} />
         </Routes>
         <Footer />

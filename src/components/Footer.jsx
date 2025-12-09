@@ -9,9 +9,6 @@ import {
   IoCheckmarkCircle,
 } from 'react-icons/io5';
 import { SiEthereum } from 'react-icons/si';
-import GlassInput from './base/GlassInput';
-import GlassButton from './base/GlassButton';
-import { COLORS } from '../styles/liquidGlass';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -57,10 +54,12 @@ const Footer = () => {
   return (
     <footer
       style={{
-        marginTop: '6rem',
-        background: COLORS.glass.heavy,
-        backdropFilter: 'blur(40px)',
-        borderTop: `1px solid ${COLORS.border.default}`,
+        marginTop: '3rem',
+        background: 'rgba(255, 255, 255, 0.96)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderTop: '1px solid #e5e7eb',
+        color: '#6b7280',
       }}
     >
       {/* Main Footer Content */}
@@ -68,42 +67,41 @@ const Footer = () => {
         style={{
           maxWidth: '1400px',
           margin: '0 auto',
-          padding: 'clamp(3rem, 5vw, 5rem) clamp(1rem, 3vw, 2rem)',
+          padding: 'clamp(2.25rem, 4vw, 3.25rem) clamp(1rem, 3vw, 1.75rem)',
         }}
       >
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '3rem',
-            marginBottom: '3rem',
+            gap: '2.5rem',
+            marginBottom: '2.5rem',
           }}
         >
           {/* Brand Column */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.1rem' }}>
               <div
                 style={{
-                  width: '50px',
-                  height: '50px',
-                  background: COLORS.glass.medium,
-                  borderRadius: '12px',
+                  width: '48px',
+                  height: '48px',
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: `0 0 30px ${COLORS.glow.cyan}`,
+                  boxShadow: '0 10px 22px rgba(17, 24, 39, 0.08)',
                 }}
               >
-                <SiEthereum size={28} color={COLORS.glow.cyan} />
+                <SiEthereum size={24} color={'#0ea5e9'} />
               </div>
               <div>
                 <div
                   style={{
-                    fontSize: '1.5rem',
+                    fontSize: '1.4rem',
                     fontWeight: 800,
-                    background: `linear-gradient(135deg, ${COLORS.glow.cyan}, ${COLORS.glow.purple})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    color: '#111827',
                   }}
                 >
                   Blockchain Charity
@@ -114,8 +112,8 @@ const Footer = () => {
             <p
               style={{
                 fontSize: '0.95rem',
-                color: COLORS.text.secondary,
-                marginBottom: '1.5rem',
+                color: '#6b7280',
+                marginBottom: '1.15rem',
                 lineHeight: 1.6,
               }}
             >
@@ -123,7 +121,7 @@ const Footer = () => {
             </p>
 
             {/* Social Links */}
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
               {socialLinks.map((social, index) => {
                 const Icon = social.icon;
                 return (
@@ -134,26 +132,27 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     aria-label={social.label}
                     style={{
-                      width: '44px',
-                      height: '44px',
-                      background: COLORS.glass.light,
-                      backdropFilter: 'blur(10px)',
-                      border: `1px solid ${COLORS.border.default}`,
+                      width: '40px',
+                      height: '40px',
+                      background: '#ffffff',
+                      border: '1px solid #e5e7eb',
                       borderRadius: '12px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: COLORS.text.secondary,
+                      color: '#6b7280',
                       textDecoration: 'none',
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 6px 14px rgba(17, 24, 39, 0.08)',
                     }}
                     whileHover={{
-                      borderColor: COLORS.glow.cyan,
-                      boxShadow: `0 4px 16px ${COLORS.shadow}, 0 0 20px ${COLORS.glow.cyan}`,
+                      borderColor: '#cbd5e1',
+                      boxShadow: '0 8px 18px rgba(17, 24, 39, 0.12)',
+                      color: '#111827',
                     }}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.96 }}
                   >
-                    <Icon size={20} />
+                    <Icon size={18} />
                   </motion.a>
                 );
               })}
@@ -164,10 +163,10 @@ const Footer = () => {
           <div>
             <h3
               style={{
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 700,
-                color: COLORS.text.light,
-                marginBottom: '1.5rem',
+                color: '#111827',
+                marginBottom: '1.05rem',
               }}
             >
               Khám phá
@@ -179,17 +178,17 @@ const Footer = () => {
                   to={link.path}
                   style={{
                     fontSize: '0.95rem',
-                    color: COLORS.text.secondary,
+                    color: '#6b7280',
                     textDecoration: 'none',
                     transition: 'all 0.2s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.color = COLORS.glow.cyan;
-                    e.target.style.textShadow = `0 0 10px ${COLORS.glow.cyan}`;
+                    e.target.style.color = '#111827';
+                    e.target.style.textDecoration = 'underline';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.color = COLORS.text.secondary;
-                    e.target.style.textShadow = 'none';
+                    e.target.style.color = '#6b7280';
+                    e.target.style.textDecoration = 'none';
                   }}
                 >
                   {link.label}
@@ -202,10 +201,10 @@ const Footer = () => {
           <div>
             <h3
               style={{
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 700,
-                color: COLORS.text.light,
-                marginBottom: '1.5rem',
+                color: '#111827',
+                marginBottom: '1.05rem',
               }}
             >
               Tài nguyên
@@ -217,17 +216,17 @@ const Footer = () => {
                   href={link.path}
                   style={{
                     fontSize: '0.95rem',
-                    color: COLORS.text.secondary,
+                    color: '#6b7280',
                     textDecoration: 'none',
                     transition: 'all 0.2s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.color = COLORS.glow.cyan;
-                    e.target.style.textShadow = `0 0 10px ${COLORS.glow.cyan}`;
+                    e.target.style.color = '#111827';
+                    e.target.style.textDecoration = 'underline';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.color = COLORS.text.secondary;
-                    e.target.style.textShadow = 'none';
+                    e.target.style.color = '#6b7280';
+                    e.target.style.textDecoration = 'none';
                   }}
                 >
                   {link.label}
@@ -240,51 +239,91 @@ const Footer = () => {
           <div>
             <h3
               style={{
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 700,
-                color: COLORS.text.light,
-                marginBottom: '1.5rem',
+                color: '#111827',
+                marginBottom: '1.05rem',
               }}
             >
               Nhận thông báo
             </h3>
-            <p style={{ fontSize: '0.9rem', color: COLORS.text.secondary, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '0.85rem' }}>
               Đăng ký để nhận tin tức về các chiến dịch mới
             </p>
 
             {subscribed ? (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 style={{
-                  padding: '1rem',
-                  background: COLORS.glass.light,
-                  border: `1px solid ${COLORS.glow.green}`,
+                  padding: '0.9rem 1rem',
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
                   borderRadius: '12px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem',
-                  boxShadow: `0 0 20px ${COLORS.glow.green}`,
+                  gap: '0.65rem',
+                  boxShadow: '0 8px 18px rgba(16, 185, 129, 0.18)',
+                  color: '#047857',
+                  fontWeight: 600,
                 }}
               >
-                <IoCheckmarkCircle size={24} color={COLORS.glow.green} />
-                <span style={{ color: COLORS.glow.green, fontWeight: 600 }}>
-                  Đăng ký thành công!
-                </span>
+                <IoCheckmarkCircle size={22} color={'#10b981'} />
+                <span>Đăng ký thành công!</span>
               </motion.div>
             ) : (
-              <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '0.75rem' }}>
-                <GlassInput
+              <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <input
                   type="email"
                   placeholder="Email của bạn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={{ flex: 1 }}
+                  style={{
+                    flex: 1,
+                    minWidth: '200px',
+                    padding: '0.75rem 0.9rem',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    background: '#ffffff',
+                    color: '#111827',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 6px 14px rgba(17, 24, 39, 0.06)',
+                    outline: 'none',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0ea5e9';
+                    e.target.style.boxShadow = '0 8px 18px rgba(14,165,233,0.18)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.boxShadow = '0 6px 14px rgba(17, 24, 39, 0.06)';
+                  }}
                 />
-                <GlassButton type="submit" variant="primary" glow="cyan">
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.75rem 1.05rem',
+                    borderRadius: '12px',
+                    border: '1px solid #0ea5e9',
+                    background: '#0ea5e9',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 18px rgba(14,165,233,0.25)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#0284c7';
+                    e.currentTarget.style.boxShadow = '0 10px 22px rgba(2,132,199,0.28)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#0ea5e9';
+                    e.currentTarget.style.boxShadow = '0 8px 18px rgba(14,165,233,0.25)';
+                  }}
+                >
                   Subscribe
-                </GlassButton>
+                </button>
               </form>
             )}
           </div>
@@ -293,8 +332,8 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div
           style={{
-            paddingTop: '2rem',
-            borderTop: `1px solid ${COLORS.border.default}`,
+            paddingTop: '1.6rem',
+            borderTop: '1px solid #e5e7eb',
             display: 'flex',
             flexDirection: 'column',
             gap: '1rem',
@@ -310,7 +349,7 @@ const Footer = () => {
             }}
           >
             {/* Copyright */}
-            <div style={{ fontSize: '0.9rem', color: COLORS.text.muted }}>
+            <div style={{ fontSize: '0.9rem', color: '#9ca3af' }}>
               © 2025 Blockchain Charity. All rights reserved.
             </div>
 
@@ -320,42 +359,42 @@ const Footer = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                background: COLORS.glass.light,
-                border: `1px solid ${COLORS.glow.green}`,
-                borderRadius: '8px',
-                boxShadow: `0 0 15px ${COLORS.glow.green}`,
+                padding: '0.5rem 0.9rem',
+                background: 'rgba(16,185,129,0.08)',
+                border: '1px solid rgba(16,185,129,0.28)',
+                borderRadius: '10px',
+                boxShadow: '0 10px 20px rgba(16,185,129,0.18)',
               }}
             >
               <div
                 style={{
                   width: '8px',
                   height: '8px',
-                  background: COLORS.glow.green,
+                  background: '#10b981',
                   borderRadius: '50%',
-                  animation: 'pulse 2s ease-in-out infinite',
+                  boxShadow: '0 0 0 6px rgba(16,185,129,0.18)',
                 }}
               />
-              <span style={{ fontSize: '0.85rem', color: COLORS.glow.green, fontWeight: 600 }}>
+              <span style={{ fontSize: '0.85rem', color: '#065f46', fontWeight: 600 }}>
                 Ethereum Mainnet
               </span>
             </div>
           </div>
 
           {/* Legal Links */}
-          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
             {footerLinks.legal.map((link, index) => (
               <a
                 key={index}
                 href={link.path}
                 style={{
                   fontSize: '0.85rem',
-                  color: COLORS.text.muted,
+                  color: '#9ca3af',
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                 }}
-                onMouseEnter={(e) => (e.target.style.color = COLORS.text.secondary)}
-                onMouseLeave={(e) => (e.target.style.color = COLORS.text.muted)}
+                onMouseEnter={(e) => (e.target.style.color = '#6b7280')}
+                onMouseLeave={(e) => (e.target.style.color = '#9ca3af')}
               >
                 {link.label}
               </a>

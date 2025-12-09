@@ -71,7 +71,7 @@ const Success = () => {
   return (
     <div
       style={{
-        background: '#ffffff',
+        background: '#f5f5f7',
         minHeight: '100vh',
         fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
         padding: '64px 20px 88px',

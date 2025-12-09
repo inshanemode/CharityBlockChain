@@ -26,7 +26,7 @@ import { transactionsHistory, formatTxHash, formatDateTime } from '../data/mockD
  */
 
 const pageStyle = {
-  background: '#ffffff',
+  background: '#f5f5f7',
   color: '#0f172a',
   fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
   minHeight: '100vh',
