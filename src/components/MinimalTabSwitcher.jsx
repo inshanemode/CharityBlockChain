@@ -13,9 +13,9 @@ const MinimalTabSwitcher = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('home');
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const buttonRef = useRef(null);
-  const panelRef = useRef(null);
+  const [isHidden, setIsHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
 
   useEffect(() => {
     const current = TAB_CONFIG.find((tab) => tab.route === location.pathname);
@@ -23,133 +23,103 @@ const MinimalTabSwitcher = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!isPanelOpen) return;
-      if (
-        panelRef.current &&
-        !panelRef.current.contains(event.target) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target)
-      ) {
-        setIsPanelOpen(false);
-      }
+    const handleScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+      window.requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+        const delta = currentY - lastScrollY.current;
+
+        // Show when near top or scrolling up, hide when scrolling down
+        if (currentY < 40) {
+          setIsHidden(false);
+        } else if (delta > 6) {
+          setIsHidden(true);
+        } else if (delta < -6) {
+          setIsHidden(false);
+        }
+
+        lastScrollY.current = currentY;
+        ticking.current = false;
+      });
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isPanelOpen]);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleTabClick = (tab) => {
     setActiveTab(tab.key);
     navigate(tab.route);
-    setIsPanelOpen(false);
   };
 
   return (
-    <>
-      <button
-        ref={buttonRef}
-        aria-label="Open navigation switcher"
-        onClick={() => setIsPanelOpen((open) => !open)}
+    <nav
+      aria-label="App tab bar"
+      style={{
+        position: 'fixed',
+        top: '12px',
+        left: '50%',
+        transform: `translate(-50%, ${isHidden ? '-140%' : '0'})`,
+        width: 'min(640px, calc(100% - 32px))',
+        padding: '10px',
+        background: 'rgba(255, 255, 255, 0.96)',
+        border: '1px solid rgba(226, 232, 240, 0.9)',
+        borderRadius: '16px',
+        boxShadow: '0 10px 30px rgba(15, 23, 42, 0.12)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        zIndex: 120,
+        fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+        transition: 'transform 220ms ease, box-shadow 220ms ease',
+      }}
+    >
+      <div
         style={{
-          position: 'fixed',
-          top: '16px',
-          right: '16px',
-          zIndex: 100,
-          width: '48px',
-          height: '48px',
-          borderRadius: '9999px',
-          border: '1px solid rgba(226, 232, 240, 0.9)',
-          background: '#ffffff',
-          color: '#111827',
-          fontSize: '1.5rem',
-          fontWeight: 500,
-          cursor: 'pointer',
-          boxShadow: '0 12px 30px rgba(15, 23, 42, 0.15)',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'transform 200ms ease, box-shadow 200ms ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.boxShadow = '0 14px 34px rgba(15, 23, 42, 0.2)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 12px 30px rgba(15, 23, 42, 0.15)';
+          alignItems: 'stretch',
+          gap: '8px',
         }}
       >
-        ⋯
-      </button>
-
-      {isPanelOpen && (
-        <div
-          ref={panelRef}
-          style={{
-            position: 'fixed',
-            top: '72px',
-            right: '16px',
-            zIndex: 90,
-            width: '220px',
-            padding: '16px',
-            borderRadius: '20px',
-            background: 'rgba(255, 255, 255, 0.96)',
-            border: '1px solid rgba(226, 232, 240, 0.9)',
-            boxShadow: '0 20px 45px rgba(15, 23, 42, 0.18)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
-          }}
-        >
-          {TAB_CONFIG.map((tab) => {
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => handleTabClick(tab)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: isActive ? '#ffffff' : 'rgba(255,255,255,0.2)',
-                  color: isActive ? '#111827' : '#6b7280',
-                  boxShadow: isActive
-                    ? '0 12px 22px rgba(15, 23, 42, 0.2)'
-                    : 'inset 0 0 0 1px rgba(229, 231, 235, 0.9)',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  textTransform: 'capitalize',
-                  transition: 'all 180ms ease',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.35)';
-                    e.currentTarget.style.color = '#374151';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
-                    e.currentTarget.style.color = '#6b7280';
-                  }
-                }}
-              >
-                {tab.label}
-                {isActive ? '•' : ''}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </>
+        {TAB_CONFIG.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => handleTabClick(tab)}
+              style={{
+                flex: 1,
+                padding: '12px 10px',
+                borderRadius: '12px',
+                border: 'none',
+                cursor: 'pointer',
+                background: isActive ? '#0ea5e9' : 'transparent',
+                color: isActive ? '#ffffff' : '#374151',
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                transition: 'all 180ms ease',
+                boxShadow: isActive ? '0 10px 24px rgba(14, 165, 233, 0.35)' : 'inset 0 0 0 1px rgba(229, 231, 235, 0.9)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(14, 165, 233, 0.08)';
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(14, 165, 233, 0.3)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(229, 231, 235, 0.9)';
+                }
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 };
 
