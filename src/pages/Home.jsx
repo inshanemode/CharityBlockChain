@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import heroImage from '../picture/1.jpg';
@@ -24,6 +24,7 @@ const FadeInSection = ({ children, delay = 0 }) => {
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
 
   // Styles
   const sectionStyle = {
@@ -57,8 +58,8 @@ const Home = () => {
   };
 
   const primaryButtonStyle = {
-    background: '#0ea5e9',
-    color: '#ffffff',
+    background: '#f8a5c2',
+    color: '#000000',
     border: 'none',
     borderRadius: '9999px',
     padding: '0.875rem 1.75rem',
@@ -69,9 +70,9 @@ const Home = () => {
   };
 
   const secondaryButtonStyle = {
-    background: 'transparent',
-    color: '#111827',
-    border: '1px solid #000000',
+    background: '#f8a5c2',
+    color: '#000000',
+    border: 'none',
     borderRadius: '9999px',
     padding: '0.875rem 1.75rem',
     fontSize: '1rem',
@@ -218,7 +219,7 @@ const Home = () => {
   ];
 
   return (
-    <main style={{ background: '#f5f5f7', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+    <main style={{ background: '#1C1C1C', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       
       {/* ===== SECTION 1: HERO - SPLIT LAYOUT ===== */}
       <section style={{ 
@@ -239,37 +240,47 @@ const Home = () => {
           alignItems: 'center',
           justifyContent: 'center',
           padding: 'clamp(2rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem)',
-          background: 'linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(245, 245, 247, 1) 55%)',
+          background: '#1C1C1C',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           position: 'relative',
           zIndex: 2,
           minHeight: '600px'
         }}>
-          <div style={{ maxWidth: '600px', width: '100%' }}>
-            <FadeInSection>
-              <h1 style={{ 
-                fontSize: 'clamp(2.5rem, 6vw, 4rem)',
-                fontWeight: 600,
-                color: '#111827',
-                lineHeight: 1.1,
-                marginBottom: '1.5rem',
-                letterSpacing: '-0.03em',
-              }}>
-                Transparent giving.<br />
-                Real impact.
+            <div style={{ maxWidth: '600px', width: '100%' }}>
+               <FadeInSection>
+              <h1
+                style={{
+                  fontSize: 'clamp(2.8rem, 8vw, 4.8rem)', // ✅ TO HƠN
+                  fontWeight: 800, // ✅ đậm & nổi bật
+                  color: '#F8F8FF',
+                  lineHeight: 1.05,
+                  marginBottom: '1.2rem',
+                  letterSpacing: '-0.025em',
+                  textShadow: `
+                    0 0 10px rgba(248, 248, 255, 0.7),
+                    0 0 20px rgba(130, 130, 255, 0.5),
+                    0 0 30px rgba(100, 100, 255, 0.3)
+                  `,
+                  
+                }}
+              >
+                Giải Cứu Công Chúa<br />
+              
               </h1>
-            </FadeInSection>
-            
-            <FadeInSection delay={0.1}>
-              <p style={{ 
-                fontSize: '1.125rem',
-                color: '#6b7280',
-                lineHeight: 1.7,
-                marginBottom: '2.5rem',
-                maxWidth: '540px'
-              }}>
-                Every donation is recorded on-chain — track your contribution from wallet to recipient.
+              <p
+                style={{
+                  fontSize: 'clamp(1.1rem, 2.8vw, 1.4rem)',
+                  color: 'rgba(248, 248, 255, 0.88)',
+                  lineHeight: 1.5,
+                  fontWeight: 400,
+                  marginTop: 0,
+                  marginBottom: '2rem',
+                  textShadow: '0 0 8px rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                Mỗi đóng góp của bạn là một bước đi<br />
+                cứu công chúa và những người dân nước ta.
               </p>
             </FadeInSection>
             
@@ -284,14 +295,14 @@ const Home = () => {
                   }}
                   onClick={() => navigate('/donate')}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#0284c7';
+                    e.currentTarget.style.background = '#f3a6b7';
                     e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(14, 165, 233, 0.4)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(248, 165, 194, 0.4)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#0ea5e9';
+                    e.currentTarget.style.background = '#f8a5c2';
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(14, 165, 233, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(248, 165, 194, 0.3)';
                   }}
                 >
                   Start a Campaign
@@ -304,15 +315,11 @@ const Home = () => {
                   }}
                   onClick={() => navigate('/campaigns')}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#000000';
-                    e.currentTarget.style.color = '#ffffff';
-                    e.currentTarget.style.borderColor = '#000000';
+                    e.currentTarget.style.background = '#f3a6b7';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#111827';
-                    e.currentTarget.style.borderColor = '#000000';
+                    e.currentTarget.style.background = '#f8a5c2';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
@@ -351,7 +358,7 @@ const Home = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 30%)',
+            background: 'linear-gradient(90deg, #1C1C1C , transparent 30%)',
             pointerEvents: 'none'
           }} />
         </div>
@@ -387,36 +394,30 @@ const Home = () => {
       </section>
 
       {/* ===== SECTION 2: CHIẾN DỊCH ĐANG DIỄN RA (ACTIVE CAMPAIGNS) ===== */}
-      <section style={{ ...sectionStyle, background: '#ffffff', padding: '6rem 1.5rem', marginTop: '4rem', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(15, 23, 42, 0.06)' }}>
+      <section style={{ ...sectionStyle, background: 'rgba(61, 61, 61, 0.24)', padding: '6rem 1.5rem', marginTop: '4rem', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(255, 255, 255, 0.51)' }}>
         <FadeInSection>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 style={{ ...subheadingStyle, marginBottom: '1rem' }}>Chiến dịch đang diễn ra</h2>
-            <p style={{ ...bodyTextStyle, margin: '0 auto 2rem' }}>
+            <h2 style={{ ...subheadingStyle, marginBottom: '1rem', color: '#ffffff', fontSize: 'clamp(2.8rem, 8vw, 4.8rem)', fontWeight: 800 }}>CHIẾN DỊCH ĐANG DIỄN RA</h2>
+            <p style={{ ...bodyTextStyle, margin: '0 auto 2rem', color: '#ffffff' }}>
               Khám phá các chiến dịch từ thiện đang được hỗ trợ — minh bạch từng đồng đóng góp trên blockchain.
             </p>
             <button
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
               style={{
-                background: '#0ea5e9',
-                color: '#ffffff',
+                background: isHovered ? '#f3a6b7' : '#f8a5c2',
+                color: '#000000',
                 border: 'none',
                 borderRadius: '9999px',
                 padding: '0.875rem 2rem',
                 fontSize: '1rem',
                 fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s ease',
+                transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+                boxShadow: isHovered ? '0 6px 20px rgba(248, 165, 194, 0.4)' : 'none',
               }}
               onClick={() => navigate('/campaigns')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#0284c7';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(14, 165, 233, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#0ea5e9';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
             >
               Xem tất cả chiến dịch
             </button>
@@ -677,8 +678,8 @@ const Home = () => {
                   <button
                     style={{
                       width: '100%',
-                      background: '#0ea5e9',
-                      color: '#ffffff',
+                      background: '#f8a5c2',
+                      color: '#000000',
                       border: 'none',
                       borderRadius: '10px',
                       padding: '0.875rem',
@@ -692,10 +693,10 @@ const Home = () => {
                       navigate('/donate');
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#0284c7';
+                      e.currentTarget.style.background = '#f3a6b7';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#0ea5e9';
+                      e.currentTarget.style.background = '#f8a5c2';
                     }}
                   >
                     Quyên góp ngay
@@ -744,7 +745,7 @@ const Home = () => {
       </section>
 
       {/* ===== SECTION 4: TRUSTED BY COMMUNITIES ===== */}
-      <section style={{ ...sectionStyle, background: '#f5f5f7', padding: '6rem 1.5rem' }}>
+      <section style={{ ...sectionStyle, background: '#888888', padding: '6rem 1.5rem' }}>
         <FadeInSection>
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <h2 style={subheadingStyle}>Trusted by communities worldwide</h2>
@@ -940,9 +941,9 @@ const Home = () => {
           <div style={{ textAlign: 'center', marginTop: '2rem' }}>
             <button
               style={{
-                background: 'transparent',
-                color: '#111827',
-                border: '1px solid #e5e7eb',
+                background: '#f8a5c2',
+                color: '#000000',
+                border: 'none',
                 borderRadius: '9999px',
                 padding: '0.875rem 2rem',
                 fontSize: '1rem',
@@ -952,13 +953,11 @@ const Home = () => {
               }}
               onClick={() => navigate('/history')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f9fafb';
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.background = '#f3a6b7';
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.background = '#f8a5c2';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
@@ -969,7 +968,7 @@ const Home = () => {
       </section>
 
       {/* ===== SECTION 6: MODULAR SOLUTIONS ===== */}
-      <section style={{ ...sectionStyle, background: '#f5f5f7', padding: '6rem 1.5rem' }}>
+      <section style={{ ...sectionStyle, background: '#888888', padding: '6rem 1.5rem' }}>
         <FadeInSection>
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <h2 style={subheadingStyle}>Giải pháp linh hoạt cho từ thiện hiện đại</h2>
@@ -1041,11 +1040,11 @@ const Home = () => {
               style={primaryButtonStyle}
               onClick={() => navigate('/donate')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#0284c7';
+                e.currentTarget.style.background = '#f3a6b7';
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#0ea5e9';
+                e.currentTarget.style.background = '#f8a5c2';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
@@ -1055,12 +1054,10 @@ const Home = () => {
               style={secondaryButtonStyle}
               onClick={() => navigate('/about')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f9fafb';
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.background = '#f3a6b7';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.background = '#f8a5c2';
               }}
             >
               Learn More
