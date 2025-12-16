@@ -57,7 +57,7 @@ const Home = () => {
   };
 
   const primaryButtonStyle = {
-    background: '#6366f1',
+    background: '#f8a5c2',
     color: '#ffffff',
     border: 'none',
     borderRadius: '9999px',
@@ -69,9 +69,9 @@ const Home = () => {
   };
 
   const secondaryButtonStyle = {
-    background: 'transparent',
-    color: '#111827',
-    border: '1px solid #e5e7eb',
+    background: '#f8a5c2',
+    color: '#ffffff',
+    border: 'none',
     borderRadius: '9999px',
     padding: '1rem 2rem',
     fontSize: '1rem',
@@ -170,7 +170,7 @@ const Home = () => {
   ];
 
   return (
-    <main style={{ background: '#ffffff', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", overflow: 'hidden' }}>
+    <main style={{ background: '#737373', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", overflow: 'hidden' }}>
       
       {/* ===== SECTION 1: HERO WITH GRADIENT ===== */}
       <section style={{ 
@@ -248,14 +248,14 @@ const Home = () => {
           <FadeInSection delay={0.2}>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <button
-                style={{ ...primaryButtonStyle, background: '#1e293b' }}
+                style={{ ...primaryButtonStyle }}
                 onClick={() => navigate('/donate')}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#0f172a';
+                  e.currentTarget.style.background = '#f3a6b7';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#1e293b';
+                  e.currentTarget.style.background = '#f8a5c2';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
@@ -267,7 +267,7 @@ const Home = () => {
       </section>
 
       {/* ===== TRUSTED BY LOGOS ===== */}
-      <section style={{ background: '#fafafa', padding: '3.5rem 1.5rem' }}>
+      <section style={{ background: '#888888', padding: '3.5rem 1.5rem' }}>
         <FadeInSection>
           <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
             <p style={{ fontSize: '0.813rem', color: '#6b7280', marginBottom: '2.5rem', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
@@ -297,7 +297,7 @@ const Home = () => {
       </section>
 
       {/* ===== SECTION 2: MODULAR SOLUTIONS ===== */}
-      <section style={{ ...sectionStyle, background: '#ffffff', padding: '7rem 1.5rem', position: 'relative' }}>
+      <section style={{ ...sectionStyle, background: '#888888', padding: '7rem 1.5rem', position: 'relative' }}>
         {/* Decorative blur orb */}
         <div style={{
           position: 'absolute',
@@ -401,7 +401,7 @@ const Home = () => {
       <section style={{ 
         ...sectionStyle, 
         textAlign: 'center',
-        background: 'linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)',
+        background: 'linear-gradient(180deg, #888888 0%, #808080 100%)',
         padding: '7rem 1.5rem'
       }}>
         <FadeInSection>
@@ -456,7 +456,7 @@ const Home = () => {
       </section>
 
       {/* ===== VISUAL SHOWCASE WITH FLOATING IMAGE ===== */}
-      <section style={{ ...sectionStyle, background: '#ffffff', padding: '7rem 1.5rem', overflow: 'visible' }}>
+      <section style={{ ...sectionStyle, background: '#888888', padding: '7rem 1.5rem', overflow: 'visible' }}>
         <FadeInSection>
           <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
             <motion.div
@@ -486,7 +486,7 @@ const Home = () => {
       </section>
 
       {/* ===== SECTION 4: TRUSTED BY COMMUNITIES ===== */}
-      <section style={{ ...sectionStyle, background: '#fafafa', padding: '7rem 1.5rem' }}>
+      <section style={{ ...sectionStyle, background: '#888888', padding: '7rem 1.5rem' }}>
         <FadeInSection>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <p style={{ fontSize: '0.875rem', color: '#8b5cf6', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '1rem' }}>
@@ -589,7 +589,7 @@ const Home = () => {
       </section>
 
       {/* ===== SECTION 5: FOR EVERYONE ===== */}
-      <section style={{ ...sectionStyle, padding: '7rem 1.5rem', background: '#ffffff' }}>
+      <section style={{ ...sectionStyle, padding: '7rem 1.5rem', background: '#888888' }}>
         <FadeInSection>
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <p style={{ fontSize: '0.875rem', color: '#8b5cf6', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '1rem' }}>
@@ -711,8 +711,8 @@ const Home = () => {
           <div style={{ textAlign: 'center', marginTop: '4rem' }}>
             <button
               style={{
-                background: '#ffffff',
-                color: '#0f172a',
+                background: '#f8a5c2',
+                color: '#ffffff',
                 border: 'none',
                 borderRadius: '9999px',
                 padding: '1rem 2rem',
@@ -723,11 +723,11 @@ const Home = () => {
               }}
               onClick={() => window.open('https://github.com', '_blank')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f3f4f6';
+                e.currentTarget.style.background = '#f3a6b7';
                 e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.background = '#f8a5c2';
                 e.currentTarget.style.transform = 'translateY(0) scale(1)';
               }}
             >
@@ -743,7 +743,7 @@ const Home = () => {
         textAlign: 'center', 
         paddingBottom: '10rem',
         paddingTop: '10rem',
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(236, 72, 153, 0.03) 100%)'
+        background: '#888888'
       }}>
         <FadeInSection>
           <h2 style={{ ...subheadingStyle, marginBottom: '1.25rem', fontSize: 'clamp(1.75rem, 3vw, 2.75rem)' }}>
@@ -757,12 +757,12 @@ const Home = () => {
               style={{ ...primaryButtonStyle, fontSize: '1.05rem', padding: '1.1rem 2.25rem' }}
               onClick={() => navigate('/donate')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#4f46e5';
+                e.currentTarget.style.background = '#f3a6b7';
                 e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.boxShadow = '0 15px 35px rgba(99, 102, 241, 0.3)';
+                e.currentTarget.style.boxShadow = '0 15px 35px rgba(248, 165, 194, 0.3)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#6366f1';
+                e.currentTarget.style.background = '#f8a5c2';
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
@@ -773,12 +773,10 @@ const Home = () => {
               style={{ ...secondaryButtonStyle, fontSize: '1.05rem', padding: '1.1rem 2.25rem' }}
               onClick={() => navigate('/about')}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f9fafb';
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.background = '#f3a6b7';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.background = '#f8a5c2';
               }}
             >
               Contact sales

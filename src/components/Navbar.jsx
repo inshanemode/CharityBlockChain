@@ -8,7 +8,8 @@ import {
   IoWallet, 
   IoInformationCircle,
   IoMenu,
-  IoClose 
+  IoClose,
+  IoAddCircleOutline
 } from 'react-icons/io5';
 import { SiEthereum } from 'react-icons/si';
 import { COLORS, Z_INDEX } from '../styles/liquidGlass';
@@ -42,11 +43,10 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Navigation items
+  // Navigation items (main nav - right side)
   const navItems = [
     { path: '/', label: 'Home', icon: <IoHome size={20} /> },
     { path: '/campaigns', label: 'Campaigns', icon: <IoRocket size={20} /> },
-    { path: '/explorer', label: 'Explorer', icon: <IoSearch size={20} /> },
     { path: '/my-wallet', label: 'My Wallet', icon: <IoWallet size={20} /> },
     { path: '/about', label: 'About', icon: <IoInformationCircle size={20} /> },
   ];
@@ -131,56 +131,101 @@ const Navbar = () => {
           style={{
             maxWidth: '1280px',
             margin: '0 auto',
-            padding: '1rem 1.5rem',
+            padding: '1.25rem 2rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '2rem',
           }}
         >
-          {/* Logo */}
-          <Link to="/" style={logoStyle}>
-            <SiEthereum size={28} style={{ filter: `drop-shadow(0 0 10px ${COLORS.glow.cyan})` }} />
-            <span>BlockCharity</span>
-          </Link>
+          {/* Left Column: Logo + Function Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Logo */}
+            <Link to="/" style={logoStyle}>
+              <SiEthereum size={28} style={{ filter: `drop-shadow(0 0 10px ${COLORS.glow.cyan})` }} />
+              <span>BlockCharity</span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div
-            style={{
-              display: 'none',
-              alignItems: 'center',
-              gap: '0.5rem',
-              flex: 1,
-              justifyContent: 'center',
-            }}
-            className="desktop-nav"
-          >
-            {navItems.map((item) => (
+            {/* Function Buttons - Desktop only */}
+            <div
+              className="function-buttons"
+              style={{
+                display: 'none',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginLeft: '1rem',
+              }}
+            >
+              {/* Create Button */}
+              <GlassButton
+                variant="primary"
+                size="sm"
+                glow="cyan"
+                onClick={() => window.location.href = '/create'}
+                icon={<IoAddCircleOutline size={18} />}
+                iconPosition="left"
+              >
+                Create
+              </GlassButton>
+
+              {/* Search Link */}
               <Link
-                key={item.path}
-                to={item.path}
-                style={navLinkStyle(isActive(item.path))}
+                to="/explorer"
+                style={navLinkStyle(isActive('/explorer'))}
                 onMouseEnter={(e) => {
-                  if (!isActive(item.path)) {
+                  if (!isActive('/explorer')) {
                     e.currentTarget.style.background = COLORS.glass.light;
                     e.currentTarget.style.borderColor = COLORS.border.default;
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive(item.path)) {
+                  if (!isActive('/explorer')) {
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.borderColor = 'transparent';
                   }
                 }}
               >
-                {item.icon}
-                <span className="nav-label">{item.label}</span>
+                <IoSearch size={18} />
+                <span className="nav-label">Search</span>
               </Link>
-            ))}
+            </div>
           </div>
 
-          {/* Right section */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Right Column: Main Navigation + Wallet */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1, justifyContent: 'flex-end' }}>
+            {/* Desktop Navigation */}
+            <div
+              style={{
+                display: 'none',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+              className="desktop-nav"
+            >
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  style={navLinkStyle(isActive(item.path))}
+                  onMouseEnter={(e) => {
+                    if (!isActive(item.path)) {
+                      e.currentTarget.style.background = COLORS.glass.light;
+                      e.currentTarget.style.borderColor = COLORS.border.default;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive(item.path)) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = 'transparent';
+                    }
+                  }}
+                >
+                  {item.icon}
+                  <span className="nav-label">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+
             {/* Network badge - Desktop only */}
             <div
               className="network-badge"
@@ -333,6 +378,9 @@ const Navbar = () => {
       <style>{`
         @media (min-width: 768px) {
           .desktop-nav {
+            display: flex !important;
+          }
+          .function-buttons {
             display: flex !important;
           }
           .mobile-menu-btn {

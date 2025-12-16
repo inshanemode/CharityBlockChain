@@ -11,6 +11,7 @@ const Campaigns = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [displayCount, setDisplayCount] = useState(6);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Filter campaigns
   const filteredCampaigns = campaigns.filter((campaign) => {
@@ -43,23 +44,52 @@ const Campaigns = () => {
             transition={{ duration: 0.5 }}
             className="space-y-8"
           >
-            <div className="space-y-3">
-              <h1 className="text-3xl md:text-4xl font-medium text-gray-900">Tất cả chiến dịch</h1>
-              <p className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl">
-                Khám phá và ủng hộ các chiến dịch từ thiện được ghi nhận trên blockchain.
-              </p>
-            </div>
-
-            <div className="max-w-2xl">
-              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-md">
-                <IoSearchOutline className="text-gray-500" size={20} />
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm kiếm chiến dịch..."
-                  className="w-full bg-transparent text-gray-900 placeholder:text-gray-500 focus:outline-none"
-                />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => console.log('Create campaign')}
+                  className="flex items-center gap-2 rounded-lg bg-white/96 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md"
+                  style={{
+                    border: '1px solid rgba(226, 232, 240, 0.9)',
+                    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+                  }}
+                >
+                  <span style={{ fontSize: '16px' }}>+</span>
+                  Create
+                </button>
+                
+                <button
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                  className="flex items-center gap-2 rounded-lg bg-white/96 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md"
+                  style={{
+                    border: '1px solid rgba(226, 232, 240, 0.9)',
+                    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+                  }}
+                >
+                  <IoSearchOutline size={16} />
+                  Search
+                </button>
               </div>
+
+              {isSearchOpen && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="flex-1 max-w-md"
+                >
+                  <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-md">
+                    <IoSearchOutline className="text-gray-500" size={20} />
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Tìm kiếm chiến dịch..."
+                      className="w-full bg-transparent text-gray-900 placeholder:text-gray-500 focus:outline-none"
+                      autoFocus
+                    />
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -82,6 +112,10 @@ const Campaigns = () => {
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="mb-6 space-y-2">
+          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Tất cả chiến dịch</h1>
+          <p className="text-base text-gray-700">Danh sách các chiến dịch đang hiển thị bên dưới.</p>
+        </div>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -148,6 +182,6 @@ const Campaigns = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Campaigns;
