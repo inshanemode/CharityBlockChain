@@ -69,13 +69,13 @@ const GlassButton = ({
     primary: {
       background: COLORS.glass.medium,
       border: `1px solid ${COLORS.border.default}`,
-      color: COLORS.text.light,
+      color: '#111827', // màu đen đậm
       boxShadow: `0 4px 16px ${COLORS.shadow}, 0 0 20px ${COLORS.glow[glow]}`,
     },
     secondary: {
       background: COLORS.glass.light,
       border: `1px solid ${COLORS.border.default}`,
-      color: COLORS.text.light,
+      color: '#111827', // màu đen đậm
       boxShadow: `0 4px 16px ${COLORS.shadow}`,
     },
     outline: {

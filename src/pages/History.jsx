@@ -167,7 +167,7 @@ const History = () => {
       render: (campaign) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SiEthereum size={16} color="#111827" />
-          <span>{campaign}</span>
+          <span style={{ color: '#111827', fontWeight: 600 }}>{campaign}</span>
         </div>
       ),
     },

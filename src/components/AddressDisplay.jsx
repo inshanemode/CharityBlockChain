@@ -42,17 +42,17 @@ const AddressDisplay = ({
   const sizeStyles = {
     sm: {
       padding: '0.5rem 0.75rem',
-      fontSize: '0.8rem',
+      fontSize: '1.0rem', // nhỏ lại 1 size
       iconSize: 16,
     },
     md: {
       padding: '0.75rem 1rem',
-      fontSize: '0.9rem',
+      fontSize: '1.1rem', // nhỏ lại 1 size
       iconSize: 18,
     },
     lg: {
       padding: '1rem 1.25rem',
-      fontSize: '1rem',
+      fontSize: '1.2rem', // nhỏ lại 1 size
       iconSize: 20,
     },
   };
@@ -81,7 +81,7 @@ const AddressDisplay = ({
       }}
     >
       {/* Address text */}
-      <span style={{ userSelect: 'all' }}>
+      <span style={{ userSelect: 'all', color: '#111827', fontWeight: 600 }}>
         {displayAddress}
       </span>
 

@@ -99,7 +99,7 @@ export const campaigns = [
     id: 7,
     title: "Học bổng cho sinh viên nghèo vượt khó",
     description: "Trao học bổng toàn phần cho 100 sinh viên có thành tích xuất sắc nhưng hoàn cảnh khó khăn.",
-    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800",
+    image: "https://img.global.news.samsung.com/vn/wp-content/uploads/2017/12/LUC_5541-1024x683.jpg",
     category: "Education",
     raised: 123.45,
     goal: 180,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   IoCheckmarkCircle,
   IoWalletOutline,
@@ -15,6 +15,12 @@ import useWallet from '../hooks/useWallet';
 import useContract from '../hooks/useContract';
 import { campaigns, formatAddress } from '../data/mockData';
 
+// Lấy campaignId từ query param
+const useCampaignIdFromQuery = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  return params.get('campaign');
+};
 /**
  * Donate Page - Donation flow với Web3 integration
  * 
@@ -89,6 +95,7 @@ const pillButtonStyle = (active) => ({
 
 const Donate = () => {
   const navigate = useNavigate();
+  const campaignId = useCampaignIdFromQuery();
   const { isConnected, address, balance, isConnecting, connectWallet, disconnectWallet } = useWallet();
   const { donate, loading: contractLoading } = useContract();
 
@@ -390,7 +397,12 @@ const Donate = () => {
                         style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '10px' }}
                       />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, color: '#111827', marginBottom: '4px' }}>{campaign.title}</div>
+                        <div style={{ fontWeight: 600, color: '#111827', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
+                          {campaign.title}
+                          {selectedCampaign?.id === campaign.id && (
+                            <IoCheckmarkCircle size={22} color="#22c55e" style={{ marginLeft: 8, verticalAlign: 'middle' }} />
+                          )}
+                        </div>
                         <div style={{ color: '#6b7280', fontSize: '0.95rem' }}>
                           {campaign.raised.toFixed(2)} / {campaign.goal.toFixed(2)} ETH
                         </div>
@@ -411,10 +423,13 @@ const Donate = () => {
                 {quickAmounts.map((preset) => (
                   <button
                     key={preset.value}
-                    style={pillButtonStyle(amount === preset.value.toString())}
+                    style={{ ...pillButtonStyle(amount === preset.value.toString()), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                     onClick={() => handleQuickAmount(preset.value)}
                   >
-                    {preset.value} ETH
+                    <span>{preset.value} ETH</span>
+                    {amount === preset.value.toString() && (
+                      <IoCheckmarkCircle size={20} color="#22c55e" style={{ marginLeft: 8, verticalAlign: 'middle' }} />
+                    )}
                   </button>
                 ))}
               </div>

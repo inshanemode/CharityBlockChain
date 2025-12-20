@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { IoFlashOutline } from 'react-icons/io5';
+import { IoFlashOutline, IoCheckmarkCircle } from 'react-icons/io5';
 
 /**
  * GasFeeDisplay Component - Display và select gas fee
@@ -123,9 +123,16 @@ const GasFeeDisplay = ({
                   fontWeight: 600,
                   color: '#111827',
                   marginBottom: '0.15rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
                 }}
               >
                 {option.label}
+                {isSelected && (
+                  <IoCheckmarkCircle size={18} color="#22c55e" style={{ marginLeft: 6, verticalAlign: 'middle' }} />
+                )}
               </div>
               <div
                 style={{
