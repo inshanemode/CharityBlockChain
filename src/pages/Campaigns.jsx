@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import GlassModal from '../components/base/GlassModal';
 import { motion } from 'framer-motion';
 import { IoSearchOutline } from 'react-icons/io5';
 import CampaignCard from '../components/CampaignCard';
-import { campaigns, categories } from '../data/mockData';
+import { campaigns as initialCampaigns, categories } from '../data/mockData';
 
 /**
  * Campaigns Page - Danh sách tất cả chiến dịch với filter và search
  */
 const Campaigns = () => {
+  const [campaigns, setCampaigns] = useState(() => {
+    const stored = localStorage.getItem('campaigns');
+    return stored ? JSON.parse(stored) : initialCampaigns;
+  });
+    // Save campaigns to localStorage whenever campaigns change
+    useEffect(() => {
+      localStorage.setItem('campaigns', JSON.stringify(campaigns));
+    }, [campaigns]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [displayCount, setDisplayCount] = useState(6);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newCampaign, setNewCampaign] = useState({
+    title: '',
+    description: '',
+    goal: '',
+    image: '',
+    category: categories[0]?.id || 'education',
+  });
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editCampaign, setEditCampaign] = useState(null);
 
   // Filter campaigns
   const filteredCampaigns = campaigns.filter((campaign) => {
@@ -47,7 +66,7 @@ const Campaigns = () => {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => console.log('Create campaign')}
+                  onClick={() => setIsCreateOpen(true)}
                   className="flex items-center gap-2 rounded-lg bg-white/96 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md"
                   style={{
                     border: '1px solid rgba(226, 232, 240, 0.9)',
@@ -57,6 +76,91 @@ const Campaigns = () => {
                   <span style={{ fontSize: '16px' }}>+</span>
                   Create
                 </button>
+                      {/* Modal tạo chiến dịch mới */}
+                      <GlassModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Tạo chiến dịch mới" size="md">
+                        <form
+                          onSubmit={e => {
+                            e.preventDefault();
+                            setCampaigns(prev => [
+                              {
+                                id: Date.now(),
+                                title: newCampaign.title,
+                                description: newCampaign.description,
+                                  goal: Number((newCampaign.goal + '').replace(',', '.')),
+                                image: newCampaign.image,
+                                category: newCampaign.category,
+                                raised: 0,
+                                donors: 0,
+                                contractAddress: '',
+                                transactions: 0,
+                                status: 'active',
+                              },
+                              ...prev
+                            ]);
+                            setIsCreateOpen(false);
+                            setNewCampaign({ title: '', description: '', goal: '', image: '', category: categories[0]?.id || 'education' });
+                          }}
+                          style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+                        >
+                          <label>
+                            Tiêu đề
+                            <input
+                              type="text"
+                              value={newCampaign.title}
+                              onChange={e => setNewCampaign({ ...newCampaign, title: e.target.value })}
+                              required
+                              className="w-full rounded border px-3 py-2 mt-1"
+                            />
+                          </label>
+                          <label>
+                            Mô tả
+                            <textarea
+                              value={newCampaign.description}
+                              onChange={e => setNewCampaign({ ...newCampaign, description: e.target.value })}
+                              required
+                              className="w-full rounded border px-3 py-2 mt-1"
+                              rows={3}
+                            />
+                          </label>
+                          <label>
+                            Số tiền mục tiêu (ETH)
+                            <input
+                                type="text"
+                                value={newCampaign.goal}
+                                onChange={e => setNewCampaign({ ...newCampaign, goal: e.target.value })}
+                              required
+                              min={0.01}
+                              step={0.01}
+                              className="w-full rounded border px-3 py-2 mt-1"
+                            />
+                          </label>
+                          <label>
+                            Ảnh đại diện (URL)
+                            <input
+                              type="text"
+                              value={newCampaign.image}
+                              onChange={e => setNewCampaign({ ...newCampaign, image: e.target.value })}
+                              className="w-full rounded border px-3 py-2 mt-1"
+                            />
+                          </label>
+                          <label>
+                            Danh mục
+                            <select
+                              value={newCampaign.category}
+                              onChange={e => setNewCampaign({ ...newCampaign, category: e.target.value })}
+                              className="w-full rounded border px-3 py-2 mt-1"
+                            >
+                              {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
+                          </label>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                            <button type="button" onClick={() => setIsCreateOpen(false)} className="rounded px-4 py-2 bg-gray-200 font-medium">Hủy</button>
+                            <button type="submit" className="rounded px-4 py-2 bg-blue-500 text-white font-medium">Tạo mới</button>
+                          </div>
+                        </form>
+                      </GlassModal>
                 
                 <button
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -135,9 +239,103 @@ const Campaigns = () => {
                   transition={{ delay: 0.05 * index }}
                   className="transition-transform duration-300 hover:-translate-y-[2px]"
                 >
-                  <CampaignCard {...campaign} />
+                  <div style={{ position: 'relative' }}>
+                    <CampaignCard {...campaign} />
+                    <button
+                      style={{ position: 'absolute', top: 12, right: 12, zIndex: 2, background: '#f3f4f6', borderRadius: 6, padding: '4px 10px', fontSize: 13, border: '1px solid #e5e7eb', cursor: 'pointer' }}
+                      onClick={() => {
+                        setEditCampaign(campaign);
+                        setIsEditOpen(true);
+                      }}
+                    >
+                      Chỉnh sửa
+                    </button>
+                  </div>
                 </motion.div>
               ))}
+                  {/* Modal chỉnh sửa chiến dịch */}
+                  <GlassModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Chỉnh sửa chiến dịch" size="md">
+                    {editCampaign && (
+                      <form
+                        onSubmit={e => {
+                          e.preventDefault();
+                          setCampaigns(prev => prev.map(c =>
+                            c.id === editCampaign.id
+                              ? {
+                                  ...c,
+                                  title: editCampaign.title,
+                                  description: editCampaign.description,
+                                  goal: Number((editCampaign.goal + '').replace(',', '.')),
+                                  image: editCampaign.image,
+                                  category: editCampaign.category,
+                                }
+                              : c
+                          ));
+                          setIsEditOpen(false);
+                          setEditCampaign(null);
+                        }}
+                        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+                      >
+                        <label>
+                          Tiêu đề
+                          <input
+                            type="text"
+                            value={editCampaign.title}
+                            onChange={e => setEditCampaign({ ...editCampaign, title: e.target.value })}
+                            required
+                            className="w-full rounded border px-3 py-2 mt-1"
+                          />
+                        </label>
+                        <label>
+                          Mô tả
+                          <textarea
+                            value={editCampaign.description}
+                            onChange={e => setEditCampaign({ ...editCampaign, description: e.target.value })}
+                            required
+                            className="w-full rounded border px-3 py-2 mt-1"
+                            rows={3}
+                          />
+                        </label>
+                        <label>
+                          Số tiền mục tiêu (ETH)
+                          <input
+                            type="text"
+                            value={editCampaign.goal}
+                            onChange={e => setEditCampaign({ ...editCampaign, goal: e.target.value })}
+                            required
+                            min={0.01}
+                            step={0.01}
+                            className="w-full rounded border px-3 py-2 mt-1"
+                          />
+                        </label>
+                        <label>
+                          Ảnh đại diện (URL)
+                          <input
+                            type="text"
+                            value={editCampaign.image}
+                            onChange={e => setEditCampaign({ ...editCampaign, image: e.target.value })}
+                            className="w-full rounded border px-3 py-2 mt-1"
+                          />
+                        </label>
+                        <label>
+                          Danh mục
+                          <select
+                            value={editCampaign.category}
+                            onChange={e => setEditCampaign({ ...editCampaign, category: e.target.value })}
+                            className="w-full rounded border px-3 py-2 mt-1"
+                          >
+                            {categories.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                          <button type="button" onClick={() => { setIsEditOpen(false); setEditCampaign(null); }} className="rounded px-4 py-2 bg-gray-200 font-medium">Hủy</button>
+                          <button type="submit" className="rounded px-4 py-2 bg-blue-500 text-white font-medium">Lưu thay đổi</button>
+                        </div>
+                      </form>
+                    )}
+                  </GlassModal>
             </div>
 
             {hasMore && (

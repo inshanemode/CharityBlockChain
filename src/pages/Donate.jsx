@@ -13,9 +13,16 @@ import GasFeeDisplay from '../components/GasFeeDisplay';
 import TransactionStatus from '../components/TransactionStatus';
 import useWallet from '../hooks/useWallet';
 import useContract from '../hooks/useContract';
-import { campaigns, formatAddress } from '../data/mockData';
+import { campaigns as mockCampaigns, formatAddress } from '../data/mockData';
 
-// Lấy campaignId từ query param
+// Lấy danh sách campaigns từ localStorage nếu có, nếu không thì lấy từ mockData
+const getCampaigns = () => {
+  try {
+    const stored = localStorage.getItem('campaigns');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return mockCampaigns;
+};
 const useCampaignIdFromQuery = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -177,7 +184,17 @@ const Donate = () => {
 
       if (result.success) {
         setTxStatus('success');
-        
+        // Update raised amount in localStorage
+        try {
+          const stored = localStorage.getItem('campaigns');
+          let campaigns = stored ? JSON.parse(stored) : [];
+          campaigns = campaigns.map(c =>
+            c.id === selectedCampaign.id
+              ? { ...c, raised: (parseFloat(c.raised || 0) + parseFloat(amount)) }
+              : c
+          );
+          localStorage.setItem('campaigns', JSON.stringify(campaigns));
+        } catch (e) {}
         // Navigate to success page sau 1 giây
         setTimeout(() => {
           navigate('/success', { 
@@ -358,7 +375,7 @@ const Donate = () => {
             >
               <label style={labelStyle}>Chọn chiến dịch</label>
               <div style={{ display: 'grid', gap: '12px', maxHeight: '320px', overflowY: 'auto' }}>
-                {campaigns
+                {getCampaigns()
                   .filter((c) => c.status === 'active')
                   .map((campaign) => (
                     <button

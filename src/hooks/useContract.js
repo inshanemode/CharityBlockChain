@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { campaigns } from '../data/mockData';
+import { campaigns as mockCampaigns } from '../data/mockData';
+// Helper: get campaigns from localStorage if available
+const getCampaigns = () => {
+  try {
+    const stored = localStorage.getItem('campaigns');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return mockCampaigns;
+};
 
 /**
  * useContract Hook - Mock smart contract interactions
@@ -24,7 +32,7 @@ const useContract = () => {
       // Simulate blockchain read delay
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      const campaign = campaigns.find(c => c.id === campaignId);
+      const campaign = getCampaigns().find(c => c.id === campaignId);
       
       if (!campaign) {
         throw new Error('Campaign not found');
@@ -60,7 +68,7 @@ const useContract = () => {
       }
 
       // Get campaign
-      const campaign = campaigns.find(c => c.id === campaignId);
+      const campaign = getCampaigns().find(c => c.id === campaignId);
       if (!campaign) {
         throw new Error('Campaign not found');
       }
@@ -152,7 +160,7 @@ const useContract = () => {
       setLoading(false);
       return {
         success: true,
-        data: campaigns,
+        data: getCampaigns(),
       };
     } catch (err) {
       setError(err.message);

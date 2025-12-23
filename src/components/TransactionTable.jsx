@@ -170,7 +170,7 @@ const TransactionTable = ({
 
           {/* Table body */}
           <tbody>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {paginatedData.map((row, index) => (
                 <motion.tr
                   key={index}

@@ -126,6 +126,8 @@ export const campaigns = [
     status: "active",
   },
 ];
+const mockData = { campaigns };
+export default mockData;
 
 /**
  * STATS DATA
@@ -700,23 +702,4 @@ export const formatDateTime = (dateString) => {
   });
 };
 
-export default {
-  campaigns,
-  stats,
-  categories,
-  recentTransactions,
-  transactionsHistory,
-  blocksData,
-  donationVolumeData,
-  campaignDistributionData,
-  donorActivityData,
-  nftBadges,
-  formatETH,
-  formatAddress,
-  formatTxHash,
-  calculateProgress,
-  getCategoryColor,
-  formatDate,
-  formatTimeAgo,
-  formatDateTime,
-};
+// Chỉ export default một lần ở cuối file, không lặp lại nếu đã export ở trên

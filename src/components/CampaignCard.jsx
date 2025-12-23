@@ -8,13 +8,7 @@ import {
   IoCheckmark,
 } from 'react-icons/io5';
 import { SiEthereum } from 'react-icons/si';
-import {
-  formatETH,
-  formatAddress,
-  formatTxHash,
-  calculateProgress,
-  getCategoryColor,
-} from '../data/mockData';
+import { formatETH, formatAddress, formatTxHash, calculateProgress, getCategoryColor } from '../data/mockData';
 
 /**
  * CampaignCard Component - Glass card cho campaign
@@ -114,58 +108,37 @@ const CampaignCard = ({
           <div className="text-xs font-semibold text-gray-700">{progress.toFixed(0)}% đạt được</div>
         </div>
 
+
         <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3">
           <SiEthereum size={18} className="text-gray-800" />
           <span className="flex-1 font-mono text-sm text-gray-700">{formatAddress(contractAddress)}</span>
           <button
             onClick={handleCopy}
-            className="rounded-md border border-gray-200 bg-white/50 px-2 py-2 text-gray-600 backdrop-blur-md transition-all duration-300 hover:bg-white/70 hover:shadow-md hover:-translate-y-[1px]"
-            title="Copy address"
+            className="rounded px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 border border-gray-200"
           >
-            {copied ? <IoCheckmark size={18} /> : <IoCopyOutline size={18} />}
+            {copied ? <IoCheckmark size={14} /> : <IoCopyOutline size={14} />}
+            {copied ? 'Đã copy' : 'Copy'}
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 rounded-lg border border-gray-100 bg-white p-4">
-          {statsHighlights.map((stat) => (
-            <div key={stat.label} className="space-y-1">
-              <div className={`text-lg font-semibold ${stat.color}`}>{stat.value}</div>
-              <div className="text-xs text-gray-600">{stat.label}</div>
-            </div>
-          ))}
+        <div>
+          <div className="text-xs text-gray-600">Donors</div>
+          <div className="text-base font-semibold text-gray-900">{donors.toLocaleString()}</div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-gray-100 pt-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-800">
-              <IoPersonOutline size={18} />
-            </div>
-            <div>
-              <div className="text-xs text-gray-600">Donors</div>
-              <div className="text-base font-semibold text-gray-900">{donors.toLocaleString()}</div>
-            </div>
+        {lastTxHash && (
+          <div className="text-right">
+            <div className="text-[11px] uppercase tracking-wide text-gray-500">Last TX</div>
+            <div className="font-mono text-xs text-gray-700">{formatTxHash(lastTxHash)}</div>
           </div>
-
-          {lastTxHash && (
-            <div className="text-right">
-              <div className="text-[11px] uppercase tracking-wide text-gray-500">Last TX</div>
-              <div className="font-mono text-xs text-gray-700">{formatTxHash(lastTxHash)}</div>
-            </div>
-          )}
-        </div>
+        )}
 
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleDonate}
             className="flex-1 rounded-md border border-gray-200 bg-white/50 px-5 py-2.5 font-medium text-gray-800 backdrop-blur-md transition-all duration-300 hover:bg-white/70 hover:shadow-md hover:-translate-y-[1px]"
           >
-            {status === 'completed' ? 'Xem chi tiết' : 'Quyên góp ngay'}
-          </button>
-          <button
-            onClick={() => navigate(`/campaigns/${id}`)}
-            className="rounded-md border border-gray-200 bg-white/50 px-5 py-2.5 font-medium text-gray-800 backdrop-blur-md transition-all duration-300 hover:bg-white/70 hover:shadow-md hover:-translate-y-[1px]"
-          >
-            Xem chiến dịch
+            Xem chi tiết
           </button>
         </div>
       </div>

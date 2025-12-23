@@ -143,9 +143,7 @@ const GlassButton = ({
         !disabled && !loading
           ? {
               scale: 1.02,
-              boxShadow: variant === 'primary' 
-                ? `0 8px 24px ${COLORS.shadow}, 0 0 40px ${COLORS.glow[glow]}`
-                : `0 8px 24px ${COLORS.shadow}`,
+              boxShadow: 'none',
             }
           : {}
       }
@@ -189,17 +187,7 @@ const GlassButton = ({
       )}
 
       {/* Hover overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
-          opacity: 0,
-          transition: 'opacity 0.3s ease',
-          pointerEvents: 'none',
-        }}
-        className="button-overlay"
-      />
+      {/* Đã loại bỏ overlay hover để không còn hiệu ứng màu xanh khi hover */}
     </motion.button>
   );
 };
@@ -213,9 +201,6 @@ style.textContent = `
       height: 300px;
       opacity: 0;
     }
-  }
-  .glass-button:hover .button-overlay {
-    opacity: 1;
   }
 `;
 document.head.appendChild(style);

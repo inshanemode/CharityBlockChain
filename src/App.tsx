@@ -4,6 +4,7 @@ import MinimalTabSwitcher from './components/MinimalTabSwitcher';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Campaigns from './pages/Campaigns';
+import CampaignDetail from './pages/CampaignDetail';
 import Donate from './pages/Donate';
 import Success from './pages/Success';
 import History from './pages/History';
@@ -35,6 +36,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/:id" element={<CampaignDetail />} />
           <Route path="/products" element={<Product />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

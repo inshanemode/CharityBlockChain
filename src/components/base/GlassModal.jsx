@@ -27,25 +27,13 @@ const GlassModal = ({
   isOpen,
   onClose,
   children,
-  title = '',
+  title,
   size = 'md',
   closeOnBackdrop = true,
   closeButton = true,
   className = '',
   ...props
 }) => {
-  // Lock scroll khi modal mở
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
 
   // Close on ESC key
   useEffect(() => {
@@ -87,9 +75,7 @@ const GlassModal = ({
     maxWidth: sizes[size] || sizes.md,
     maxHeight: '90vh',
     overflowY: 'auto',
-    background: COLORS.glass.heavy,
-    backdropFilter: 'blur(40px)',
-    WebkitBackdropFilter: 'blur(40px)',
+    background: '#fff',
     border: `1px solid ${COLORS.border.hover}`,
     borderRadius: '20px',
     boxShadow: `0 20px 60px ${COLORS.shadowDark}, 0 0 80px ${COLORS.glow.cyan}`,
@@ -190,21 +176,13 @@ const GlassModal = ({
 
             {/* Modal header */}
             {title && (
-              <div
-                style={{
-                  padding: '2rem 2rem 1rem',
-                  borderBottom: `1px solid ${COLORS.border.default}`,
-                }}
-              >
+              <div style={{ padding: '2rem 2rem 1rem', borderBottom: `1px solid ${COLORS.border.default}` }}>
                 <h2
                   style={{
                     margin: 0,
                     fontSize: '1.5rem',
                     fontWeight: 700,
-                    color: COLORS.text.light,
-                    background: `linear-gradient(135deg, ${COLORS.glow.cyan}, ${COLORS.glow.purple})`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    color: '#111',
                   }}
                 >
                   {title}
