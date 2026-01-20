@@ -3,34 +3,113 @@ import GlassModal from '../components/base/GlassModal';
 import { motion } from 'framer-motion';
 import { IoSearchOutline } from 'react-icons/io5';
 import CampaignCard from '../components/CampaignCard';
-import { campaigns as initialCampaigns, categories } from '../data/mockData';
+import { categories } from '../data/mockData';
+import { ethers } from 'ethers';
+import CharityABI from '../abis/Charity.json';
+
+// Contract address - REPLACE THIS with your deployed contract address
+const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'; // Example localhost address
 
 /**
- * Campaigns Page - Danh sách tất cả chiến dịch với filter và search
+ * Campaigns Page - Fetch real campaigns from blockchain
  */
 const Campaigns = () => {
-  const [campaigns, setCampaigns] = useState(() => {
-    const stored = localStorage.getItem('campaigns');
-    return stored ? JSON.parse(stored) : initialCampaigns;
-  });
-    // Save campaigns to localStorage whenever campaigns change
-    useEffect(() => {
-      localStorage.setItem('campaigns', JSON.stringify(campaigns));
-    }, [campaigns]);
+  const [campaigns, setCampaigns] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [displayCount, setDisplayCount] = useState(6);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({
-    title: '',
-    description: '',
-    goal: '',
-    image: '',
-    category: categories[0]?.id || 'education',
-  });
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editCampaign, setEditCampaign] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Fetch campaigns from blockchain
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Check if MetaMask is installed
+        if (!window.ethereum) {
+          throw new Error('Please install MetaMask to view campaigns');
+        }
+
+        // Connect to provider
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        // Create contract instance
+        const contract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          CharityABI.abi,
+          provider
+        );
+
+        // Get total campaign count
+        const campaignCount = await contract.campaignCount();
+        const count = campaignCount.toNumber();
+
+        // Fetch all campaigns
+        const campaignsData = [];
+        for (let i = 1; i <= count; i++) {
+          try {
+            const campaign = await contract.getCampaign(i);
+            
+            // Format campaign data
+            const formattedCampaign = {
+              id: campaign.id.toNumber(),
+              title: campaign.name,
+              description: `Campaign created by ${campaign.creator.slice(0, 6)}...${campaign.creator.slice(-4)}`,
+              goal: parseFloat(ethers.utils.formatEther(campaign.goal)),
+              raised: parseFloat(ethers.utils.formatEther(campaign.totalDonations)),
+              image: `https://picsum.photos/seed/${i}/400/300`, // Random image based on ID
+              category: categories[i % categories.length]?.id || 'education',
+              creator: campaign.creator,
+              isActive: campaign.isActive,
+              donors: Math.floor(Math.random() * 100) + 10, // Mock donor count (not in contract)
+              contractAddress: CONTRACT_ADDRESS,
+              transactions: Math.floor(Math.random() * 50) + 5, // Mock transaction count
+              status: campaign.isActive ? 'active' : 'closed',
+            };
+
+            campaignsData.push(formattedCampaign);
+          } catch (err) {
+            console.error(`Error fetching campaign ${i}:`, err);
+          }
+        }
+
+        setCampaigns(campaignsData);
+      } catch (err) {
+        console.error('Error fetching campaigns:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+
+    // Optional: Listen for new campaigns
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        CharityABI.abi,
+        provider
+      );
+
+      // Listen for CampaignCreated events
+      contract.on('CampaignCreated', (id, name, creator, goal) => {
+        console.log('New campaign created:', { id, name, creator, goal });
+        // Refetch campaigns when a new one is created
+        fetchCampaigns();
+      });
+
+      // Cleanup listener
+      return () => {
+        contract.removeAllListeners('CampaignCreated');
+      };
+    }
+  }, []);
 
   // Filter campaigns
   const filteredCampaigns = campaigns.filter((campaign) => {
@@ -66,7 +145,7 @@ const Campaigns = () => {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setIsCreateOpen(true)}
+                  onClick={() => alert('Create campaign feature coming soon! Use smart contract directly.')}
                   className="flex items-center gap-2 rounded-lg bg-white/96 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md"
                   style={{
                     border: '1px solid rgba(226, 232, 240, 0.9)',
@@ -76,91 +155,6 @@ const Campaigns = () => {
                   <span style={{ fontSize: '16px' }}>+</span>
                   Create
                 </button>
-                      {/* Modal tạo chiến dịch mới */}
-                      <GlassModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Tạo chiến dịch mới" size="md">
-                        <form
-                          onSubmit={e => {
-                            e.preventDefault();
-                            setCampaigns(prev => [
-                              {
-                                id: Date.now(),
-                                title: newCampaign.title,
-                                description: newCampaign.description,
-                                  goal: Number((newCampaign.goal + '').replace(',', '.')),
-                                image: newCampaign.image,
-                                category: newCampaign.category,
-                                raised: 0,
-                                donors: 0,
-                                contractAddress: '',
-                                transactions: 0,
-                                status: 'active',
-                              },
-                              ...prev
-                            ]);
-                            setIsCreateOpen(false);
-                            setNewCampaign({ title: '', description: '', goal: '', image: '', category: categories[0]?.id || 'education' });
-                          }}
-                          style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-                        >
-                          <label>
-                            Tiêu đề
-                            <input
-                              type="text"
-                              value={newCampaign.title}
-                              onChange={e => setNewCampaign({ ...newCampaign, title: e.target.value })}
-                              required
-                              className="w-full rounded border px-3 py-2 mt-1"
-                            />
-                          </label>
-                          <label>
-                            Mô tả
-                            <textarea
-                              value={newCampaign.description}
-                              onChange={e => setNewCampaign({ ...newCampaign, description: e.target.value })}
-                              required
-                              className="w-full rounded border px-3 py-2 mt-1"
-                              rows={3}
-                            />
-                          </label>
-                          <label>
-                            Số tiền mục tiêu (ETH)
-                            <input
-                                type="text"
-                                value={newCampaign.goal}
-                                onChange={e => setNewCampaign({ ...newCampaign, goal: e.target.value })}
-                              required
-                              min={0.01}
-                              step={0.01}
-                              className="w-full rounded border px-3 py-2 mt-1"
-                            />
-                          </label>
-                          <label>
-                            Ảnh đại diện (URL)
-                            <input
-                              type="text"
-                              value={newCampaign.image}
-                              onChange={e => setNewCampaign({ ...newCampaign, image: e.target.value })}
-                              className="w-full rounded border px-3 py-2 mt-1"
-                            />
-                          </label>
-                          <label>
-                            Danh mục
-                            <select
-                              value={newCampaign.category}
-                              onChange={e => setNewCampaign({ ...newCampaign, category: e.target.value })}
-                              className="w-full rounded border px-3 py-2 mt-1"
-                            >
-                              {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                            <button type="button" onClick={() => setIsCreateOpen(false)} className="rounded px-4 py-2 bg-gray-200 font-medium">Hủy</button>
-                            <button type="submit" className="rounded px-4 py-2 bg-blue-500 text-white font-medium">Tạo mới</button>
-                          </div>
-                        </form>
-                      </GlassModal>
                 
                 <button
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -217,126 +211,59 @@ const Campaigns = () => {
 
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
         <div className="mb-6 space-y-2">
-          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">Tất cả chiến dịch</h1>
-          <p className="text-base text-gray-700">Danh sách các chiến dịch đang hiển thị bên dưới.</p>
+          <h1 className="text-3xl md:text-4xl font-semibold text-gray-900">All Campaigns</h1>
+          <p className="text-base text-gray-700">
+            {isLoading ? 'Loading campaigns from blockchain...' : 'Campaigns fetched from smart contract'}
+          </p>
         </div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-6 text-sm text-gray-600"
-        >
-          Tìm thấy <span className="font-semibold text-gray-900">{filteredCampaigns.length}</span> chiến dịch
-        </motion.div>
 
-        {displayedCampaigns.length > 0 ? (
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4"
+          >
+            <p className="text-sm text-red-800">
+              <strong>Error:</strong> {error}
+            </p>
+            <p className="mt-2 text-xs text-red-600">
+              Make sure you have MetaMask installed and the contract is deployed to the correct network.
+            </p>
+          </motion.div>
+        )}
+
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500"></div>
+            <p className="text-gray-600">Fetching campaigns from blockchain...</p>
+          </div>
+        ) : (
           <>
-            <div className="grid gap-6 md:gap-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
-              {displayedCampaigns.map((campaign, index) => (
-                <motion.div
-                  key={campaign.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * index }}
-                  className="transition-transform duration-300 hover:-translate-y-[2px]"
-                >
-                  <div style={{ position: 'relative' }}>
-                    <CampaignCard {...campaign} />
-                    <button
-                      style={{ position: 'absolute', top: 12, right: 12, zIndex: 2, background: '#f3f4f6', borderRadius: 6, padding: '4px 10px', fontSize: 13, border: '1px solid #e5e7eb', cursor: 'pointer' }}
-                      onClick={() => {
-                        setEditCampaign(campaign);
-                        setIsEditOpen(true);
-                      }}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-6 text-sm text-gray-600"
+            >
+              Found <span className="font-semibold text-gray-900">{filteredCampaigns.length}</span> campaigns
+            </motion.div>
+
+            {displayedCampaigns.length > 0 ? (
+              <>
+                <div className="grid gap-6 md:gap-8" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+                  {displayedCampaigns.map((campaign, index) => (
+                    <motion.div
+                      key={campaign.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 * index }}
+                      className="transition-transform duration-300 hover:-translate-y-[2px]"
                     >
-                      Chỉnh sửa
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-                  {/* Modal chỉnh sửa chiến dịch */}
-                  <GlassModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Chỉnh sửa chiến dịch" size="md">
-                    {editCampaign && (
-                      <form
-                        onSubmit={e => {
-                          e.preventDefault();
-                          setCampaigns(prev => prev.map(c =>
-                            c.id === editCampaign.id
-                              ? {
-                                  ...c,
-                                  title: editCampaign.title,
-                                  description: editCampaign.description,
-                                  goal: Number((editCampaign.goal + '').replace(',', '.')),
-                                  image: editCampaign.image,
-                                  category: editCampaign.category,
-                                }
-                              : c
-                          ));
-                          setIsEditOpen(false);
-                          setEditCampaign(null);
-                        }}
-                        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-                      >
-                        <label>
-                          Tiêu đề
-                          <input
-                            type="text"
-                            value={editCampaign.title}
-                            onChange={e => setEditCampaign({ ...editCampaign, title: e.target.value })}
-                            required
-                            className="w-full rounded border px-3 py-2 mt-1"
-                          />
-                        </label>
-                        <label>
-                          Mô tả
-                          <textarea
-                            value={editCampaign.description}
-                            onChange={e => setEditCampaign({ ...editCampaign, description: e.target.value })}
-                            required
-                            className="w-full rounded border px-3 py-2 mt-1"
-                            rows={3}
-                          />
-                        </label>
-                        <label>
-                          Số tiền mục tiêu (ETH)
-                          <input
-                            type="text"
-                            value={editCampaign.goal}
-                            onChange={e => setEditCampaign({ ...editCampaign, goal: e.target.value })}
-                            required
-                            min={0.01}
-                            step={0.01}
-                            className="w-full rounded border px-3 py-2 mt-1"
-                          />
-                        </label>
-                        <label>
-                          Ảnh đại diện (URL)
-                          <input
-                            type="text"
-                            value={editCampaign.image}
-                            onChange={e => setEditCampaign({ ...editCampaign, image: e.target.value })}
-                            className="w-full rounded border px-3 py-2 mt-1"
-                          />
-                        </label>
-                        <label>
-                          Danh mục
-                          <select
-                            value={editCampaign.category}
-                            onChange={e => setEditCampaign({ ...editCampaign, category: e.target.value })}
-                            className="w-full rounded border px-3 py-2 mt-1"
-                          >
-                            {categories.map(cat => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                          <button type="button" onClick={() => { setIsEditOpen(false); setEditCampaign(null); }} className="rounded px-4 py-2 bg-gray-200 font-medium">Hủy</button>
-                          <button type="submit" className="rounded px-4 py-2 bg-blue-500 text-white font-medium">Lưu thay đổi</button>
-                        </div>
-                      </form>
-                    )}
-                  </GlassModal>
-            </div>
+                      <CampaignCard {...campaign} />
+                    </motion.div>
+                  ))}
+                </div>
 
             {hasMore && (
               <motion.div
@@ -348,7 +275,7 @@ const Campaigns = () => {
                   onClick={handleLoadMore}
                   className="rounded-md border border-gray-200 bg-white/50 px-5 py-2.5 font-medium text-gray-800 backdrop-blur-md transition-all duration-300 hover:bg-white/70 hover:shadow-md hover:-translate-y-[1px]"
                 >
-                  Xem thêm ({filteredCampaigns.length - displayCount} còn lại)
+                  Load More ({filteredCampaigns.length - displayCount} remaining)
                 </button>
               </motion.div>
             )}
@@ -361,21 +288,27 @@ const Campaigns = () => {
           >
             <div className="mx-auto max-w-md space-y-4 rounded-xl border border-gray-100 bg-white p-8 shadow-sm">
               <div className="text-4xl">🔍</div>
-              <h3 className="text-lg font-semibold text-gray-900">Không tìm thấy chiến dịch</h3>
+              <h3 className="text-lg font-semibold text-gray-900">No Campaigns Found</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.
+                {campaigns.length === 0 
+                  ? 'No campaigns have been created yet on this contract.' 
+                  : 'Try changing your search filters.'}
               </p>
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedCategory('all');
-                }}
-                className="rounded-md border border-gray-200 bg-white/50 px-5 py-2.5 font-medium text-gray-800 backdrop-blur-md transition-all duration-300 hover:bg-white/70 hover:shadow-md hover:-translate-y-[1px]"
-              >
-                Reset bộ lọc
-              </button>
+              {filteredCampaigns.length === 0 && campaigns.length > 0 && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
+                  }}
+                  className="rounded-md border border-gray-200 bg-white/50 px-5 py-2.5 font-medium text-gray-800 backdrop-blur-md transition-all duration-300 hover:bg-white/70 hover:shadow-md hover:-translate-y-[1px]"
+                >
+                  Reset Filters
+                </button>
+              )}
             </div>
           </motion.div>
+        )}
+          </>
         )}
       </div>
     </div>

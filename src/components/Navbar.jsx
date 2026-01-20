@@ -9,11 +9,14 @@ import {
   IoInformationCircle,
   IoMenu,
   IoClose,
-  IoAddCircleOutline
+  IoAddCircleOutline,
+  IoLogOutOutline,
+  IoWarningOutline
 } from 'react-icons/io5';
 import { SiEthereum } from 'react-icons/si';
 import { COLORS, Z_INDEX } from '../styles/liquidGlass';
 import GlassButton from './base/GlassButton';
+import useWallet from '../hooks/useWallet';
 
 /**
  * Navbar Component - Sticky navigation với liquid glass effect
@@ -22,7 +25,7 @@ import GlassButton from './base/GlassButton';
  * - Sticky top với dynamic blur (scroll effect)
  * - Logo với glow effect
  * - Nav links với active state
- * - Wallet connect button
+ * - Real MetaMask wallet connection
  * - Network indicator (Ethereum badge)
  * - Mobile responsive với slide-in menu
  * - Scroll-based blur increase
@@ -30,8 +33,22 @@ import GlassButton from './base/GlassButton';
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [walletAddress, setWalletAddress] = useState(null);
+  const [showWalletMenu, setShowWalletMenu] = useState(false);
   const location = useLocation();
+
+  // Use real wallet hook
+  const {
+    isConnected,
+    address,
+    balance,
+    isConnecting,
+    error,
+    chainId,
+    connectWallet,
+    disconnectWallet,
+    isMetaMaskInstalled,
+    getNetworkName,
+  } = useWallet();
 
   // Detect scroll để tăng blur
   useEffect(() => {
@@ -42,6 +59,18 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close wallet menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showWalletMenu && !e.target.closest('.wallet-menu-container')) {
+        setShowWalletMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showWalletMenu]);
 
   // Navigation items (main nav - right side)
   const navItems = [
@@ -54,20 +83,34 @@ const Navbar = () => {
   // Check if nav item is active
   const isActive = (path) => location.pathname === path;
 
-  // Mock wallet connect (sẽ thay bằng Web3 integration sau)
-  const handleConnectWallet = () => {
-    if (walletAddress) {
-      setWalletAddress(null);
+  // Handle wallet connect/disconnect
+  const handleConnectWallet = async () => {
+    if (isConnected) {
+      setShowWalletMenu(!showWalletMenu);
     } else {
-      // Mock address
-      setWalletAddress('0x1234...5678');
+      const result = await connectWallet();
+      if (!result.success) {
+        alert(result.error || 'Failed to connect wallet');
+      }
     }
   };
 
+  // Handle disconnect
+  const handleDisconnect = () => {
+    disconnectWallet();
+    setShowWalletMenu(false);
+  };
+
   // Format wallet address
-  const formatAddress = (address) => {
-    if (!address) return '';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const formatAddress = (addr) => {
+    if (!addr) return '';
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  // Format balance
+  const formatBalance = (bal) => {
+    if (!bal) return '0.0000';
+    return parseFloat(bal).toFixed(4);
   };
 
   // Navbar style với dynamic blur
@@ -246,17 +289,170 @@ const Navbar = () => {
               <span>Ethereum</span>
             </div>
 
-            {/* Wallet button */}
-            <GlassButton
-              variant={walletAddress ? 'secondary' : 'primary'}
-              size="md"
-              glow="cyan"
-              onClick={handleConnectWallet}
-              icon={<IoWallet size={20} />}
-              iconPosition="left"
-            >
-              {walletAddress ? formatAddress(walletAddress) : 'Connect Wallet'}
-            </GlassButton>
+            {/* Wallet button with dropdown */}
+            <div className="wallet-menu-container" style={{ position: 'relative' }}>
+              {!isMetaMaskInstalled() ? (
+                <GlassButton
+                  variant="primary"
+                  size="md"
+                  glow="orange"
+                  onClick={() => window.open('https://metamask.io/download/', '_blank')}
+                  icon={<IoWarningOutline size={20} />}
+                  iconPosition="left"
+                >
+                  Install MetaMask
+                </GlassButton>
+              ) : (
+                <GlassButton
+                  variant={isConnected ? 'secondary' : 'primary'}
+                  size="md"
+                  glow="cyan"
+                  onClick={handleConnectWallet}
+                  icon={<IoWallet size={20} />}
+                  iconPosition="left"
+                  disabled={isConnecting}
+                >
+                  {isConnecting 
+                    ? 'Connecting...' 
+                    : isConnected 
+                      ? formatAddress(address) 
+                      : 'Connect Wallet'
+                  }
+                </GlassButton>
+              )}
+
+              {/* Wallet Dropdown Menu */}
+              <AnimatePresence>
+                {showWalletMenu && isConnected && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: '0.5rem',
+                      minWidth: '280px',
+                      background: COLORS.glass.heavy,
+                      backdropFilter: 'blur(40px)',
+                      border: `1px solid ${COLORS.border.hover}`,
+                      borderRadius: '16px',
+                      boxShadow: `0 20px 60px ${COLORS.shadowDark}`,
+                      padding: '1rem',
+                      zIndex: Z_INDEX.modal,
+                    }}
+                  >
+                    {/* Address */}
+                    <div style={{
+                      padding: '0.75rem',
+                      background: COLORS.glass.light,
+                      borderRadius: '10px',
+                      marginBottom: '0.75rem',
+                    }}>
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        color: COLORS.text.muted,
+                        marginBottom: '0.25rem'
+                      }}>
+                        Connected Address
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        color: COLORS.text.light,
+                        fontFamily: 'monospace',
+                        wordBreak: 'break-all'
+                      }}>
+                        {address}
+                      </div>
+                    </div>
+
+                    {/* Balance */}
+                    <div style={{
+                      padding: '0.75rem',
+                      background: COLORS.glass.light,
+                      borderRadius: '10px',
+                      marginBottom: '0.75rem',
+                    }}>
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        color: COLORS.text.muted,
+                        marginBottom: '0.25rem'
+                      }}>
+                        Balance
+                      </div>
+                      <div style={{ 
+                        fontSize: '1.25rem', 
+                        color: COLORS.text.light,
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <SiEthereum size={18} color={COLORS.glow.cyan} />
+                        {formatBalance(balance)} ETH
+                      </div>
+                    </div>
+
+                    {/* Network */}
+                    <div style={{
+                      padding: '0.75rem',
+                      background: COLORS.glass.light,
+                      borderRadius: '10px',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}>
+                      <div style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: '#10B981',
+                        boxShadow: '0 0 10px #10B981',
+                      }} />
+                      <span style={{ 
+                        fontSize: '0.875rem', 
+                        color: COLORS.text.secondary 
+                      }}>
+                        {getNetworkName()}
+                      </span>
+                    </div>
+
+                    {/* Disconnect Button */}
+                    <button
+                      onClick={handleDisconnect}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '10px',
+                        color: '#EF4444',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                      }}
+                    >
+                      <IoLogOutOutline size={18} />
+                      Disconnect Wallet
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Mobile menu button */}
             <button

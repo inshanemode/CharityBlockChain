@@ -18,6 +18,7 @@ contract Charity {
     event CampaignCreated(uint id, string name, address creator, uint goal);
     event DonationReceived(uint campaignId, address donor, uint amount);
     event CampaignClosed(uint campaignId);
+    event FundsWithdrawn(uint campaignId, address creator, uint amount);
 
     function createCampaign(string memory _name, uint _goal) public {
         require(_goal > 0, "Goal must be greater than 0");
@@ -43,6 +44,18 @@ contract Charity {
 
         campaign.isActive = false;
         emit CampaignClosed(_campaignId);
+    }
+
+    function withdrawFunds(uint _campaignId) public {
+        Campaign storage campaign = campaigns[_campaignId];
+        require(msg.sender == campaign.creator, "Only the creator can withdraw funds");
+        require(campaign.totalDonations > 0, "No funds to withdraw");
+
+        uint amount = campaign.totalDonations;
+        campaign.totalDonations = 0;
+        
+        campaign.creator.transfer(amount);
+        emit FundsWithdrawn(_campaignId, campaign.creator, amount);
     }
 
     function getCampaign(uint _campaignId) public view returns (Campaign memory) {
