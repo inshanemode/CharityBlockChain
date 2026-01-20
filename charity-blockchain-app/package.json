@@ -1,0 +1,34 @@
+{
+  "name": "charity-blockchain-app",
+  "version": "0.1.0",
+  "description": "A decentralized charity system built on blockchain technology.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy": "node scripts/deploy.js"
+  },
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "web3": "^1.5.0",
+    "@openzeppelin/contracts": "^4.3.2"
+  },
+  "devDependencies": {
+    "truffle": "^5.4.0",
+    "hardhat": "^2.6.0",
+    "chai": "^4.3.4",
+    "mocha": "^8.4.0"
+  },
+  "keywords": [
+    "blockchain",
+    "charity",
+    "donations",
+    "ethereum"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
