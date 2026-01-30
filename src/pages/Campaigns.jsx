@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import GlassModal from '../components/base/GlassModal';
 import { motion } from 'framer-motion';
 import { IoSearchOutline } from 'react-icons/io5';
 import CampaignCard from '../components/CampaignCard';
 import { categories } from '../data/mockData';
-import { ethers } from 'ethers';
-import CharityABI from '../abis/Charity.json';
-
-// Contract address - REPLACE THIS with your deployed contract address
-const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'; // Example localhost address
+import useContract from '../hooks/useContract';
 
 /**
  * Campaigns Page - Fetch real campaigns from blockchain
@@ -21,6 +16,7 @@ const Campaigns = () => {
   const [displayCount, setDisplayCount] = useState(6);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [error, setError] = useState(null);
+  const { getAllCampaigns } = useContract();
 
   // Fetch campaigns from blockchain
   useEffect(() => {
@@ -29,53 +25,15 @@ const Campaigns = () => {
         setIsLoading(true);
         setError(null);
 
-        // Check if MetaMask is installed
-        if (!window.ethereum) {
-          throw new Error('Please install MetaMask to view campaigns');
+        const response = await getAllCampaigns();
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to fetch campaigns');
         }
 
-        // Connect to provider
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        
-        // Create contract instance
-        const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
-          CharityABI.abi,
-          provider
-        );
-
-        // Get total campaign count
-        const campaignCount = await contract.campaignCount();
-        const count = campaignCount.toNumber();
-
-        // Fetch all campaigns
-        const campaignsData = [];
-        for (let i = 1; i <= count; i++) {
-          try {
-            const campaign = await contract.getCampaign(i);
-            
-            // Format campaign data
-            const formattedCampaign = {
-              id: campaign.id.toNumber(),
-              title: campaign.name,
-              description: `Campaign created by ${campaign.creator.slice(0, 6)}...${campaign.creator.slice(-4)}`,
-              goal: parseFloat(ethers.utils.formatEther(campaign.goal)),
-              raised: parseFloat(ethers.utils.formatEther(campaign.totalDonations)),
-              image: `https://picsum.photos/seed/${i}/400/300`, // Random image based on ID
-              category: categories[i % categories.length]?.id || 'education',
-              creator: campaign.creator,
-              isActive: campaign.isActive,
-              donors: Math.floor(Math.random() * 100) + 10, // Mock donor count (not in contract)
-              contractAddress: CONTRACT_ADDRESS,
-              transactions: Math.floor(Math.random() * 50) + 5, // Mock transaction count
-              status: campaign.isActive ? 'active' : 'closed',
-            };
-
-            campaignsData.push(formattedCampaign);
-          } catch (err) {
-            console.error(`Error fetching campaign ${i}:`, err);
-          }
-        }
+        const campaignsData = response.data.map((campaign, index) => ({
+          ...campaign,
+          category: categories[index % categories.length]?.id || 'education',
+        }));
 
         setCampaigns(campaignsData);
       } catch (err) {
@@ -87,29 +45,7 @@ const Campaigns = () => {
     };
 
     fetchCampaigns();
-
-    // Optional: Listen for new campaigns
-    if (window.ethereum) {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        CharityABI.abi,
-        provider
-      );
-
-      // Listen for CampaignCreated events
-      contract.on('CampaignCreated', (id, name, creator, goal) => {
-        console.log('New campaign created:', { id, name, creator, goal });
-        // Refetch campaigns when a new one is created
-        fetchCampaigns();
-      });
-
-      // Cleanup listener
-      return () => {
-        contract.removeAllListeners('CampaignCreated');
-      };
-    }
-  }, []);
+  }, [getAllCampaigns]);
 
   // Filter campaigns
   const filteredCampaigns = campaigns.filter((campaign) => {
@@ -144,18 +80,6 @@ const Campaigns = () => {
           >
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => alert('Create campaign feature coming soon! Use smart contract directly.')}
-                  className="flex items-center gap-2 rounded-lg bg-white/96 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md"
-                  style={{
-                    border: '1px solid rgba(226, 232, 240, 0.9)',
-                    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
-                  }}
-                >
-                  <span style={{ fontSize: '16px' }}>+</span>
-                  Create
-                </button>
-                
                 <button
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
                   className="flex items-center gap-2 rounded-lg bg-white/96 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-md"

@@ -53,12 +53,6 @@ const CampaignCard = ({
     navigate(`/campaigns/${id}`);
   };
 
-  const statsHighlights = [
-    { label: 'ETH đã quyên góp', value: '1,234+', color: 'text-gray-800' },
-    { label: 'Giao dịch', value: '5,678+', color: 'text-gray-800' },
-    { label: 'Người ủng hộ', value: '3,456+', color: 'text-gray-800' },
-  ];
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -70,11 +64,29 @@ const CampaignCard = ({
     >
       <div className="flex flex-col gap-6">
         <div className="overflow-hidden rounded-lg border border-gray-100">
-          <img
-            src={image}
-            alt={title}
-            className="h-56 w-full object-cover"
-          />
+          {image ? (
+            <img
+              src={image}
+              alt={title}
+              className="h-56 w-full object-cover"
+            />
+          ) : (
+            <div
+              className="h-56 w-full"
+              style={{
+                background: 'linear-gradient(135deg, rgba(17,24,39,0.9), rgba(59,130,246,0.6))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '2rem',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+              }}
+            >
+              {title?.slice(0, 2).toUpperCase()}
+            </div>
+          )}
         </div>
 
         <div className="flex items-start justify-between gap-3">
@@ -121,10 +133,12 @@ const CampaignCard = ({
           </button>
         </div>
 
-        <div>
-          <div className="text-xs text-gray-600">Donors</div>
-          <div className="text-base font-semibold text-gray-900">{donors.toLocaleString()}</div>
-        </div>
+        {typeof donors === 'number' && (
+          <div>
+            <div className="text-xs text-gray-600">Donors</div>
+            <div className="text-base font-semibold text-gray-900">{donors.toLocaleString()}</div>
+          </div>
+        )}
 
         {lastTxHash && (
           <div className="text-right">

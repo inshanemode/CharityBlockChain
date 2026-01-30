@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   IoChevronBack, 
@@ -8,6 +8,8 @@ import {
 } from 'react-icons/io5';
 import { COLORS } from '../styles/liquidGlass';
 import GlassButton from './base/GlassButton';
+import { ethers } from 'ethers';
+import CharityABI from '../artifacts/contracts/Charity.sol/Charity.json';
 
 /**
  * TransactionTable Component
@@ -29,15 +31,135 @@ const TransactionTable = ({
   loading = false,
   itemsPerPage = 10,
   onRowClick,
+  fetchFromChain = false,
+  filters = {},
+  onDataLoaded,
+  currentAddress,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [chainData, setChainData] = useState([]);
+  const [chainLoading, setChainLoading] = useState(false);
+  const [chainError, setChainError] = useState(null);
+
+  const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
+
+  useEffect(() => {
+    if (!fetchFromChain) return;
+
+    const fetchEvents = async () => {
+      try {
+        setChainLoading(true);
+        setChainError(null);
+
+        if (!window.ethereum) {
+          throw new Error('MetaMask is not installed');
+        }
+        if (!CONTRACT_ADDRESS) {
+          throw new Error('Contract address is not configured');
+        }
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CharityABI.abi, provider);
+        const currentBlock = await provider.getBlockNumber();
+        const fromBlock = Math.max(currentBlock - 10000, 0);
+        const events = await contract.queryFilter(contract.filters.DonationReceived(), fromBlock, 'latest');
+
+        const campaignIdSet = new Set(events.map((event) => event.args?.campaignId?.toNumber()));
+        const campaignMap = {};
+        await Promise.all(
+          Array.from(campaignIdSet).map(async (campaignId) => {
+            if (!campaignId) return;
+            const campaign = await contract.campaigns(campaignId);
+            campaignMap[campaignId] = campaign?.name || `Campaign #${campaignId}`;
+          })
+        );
+
+        const transactions = await Promise.all(
+          events.map(async (event) => {
+            const block = await provider.getBlock(event.blockNumber);
+            const receipt = await provider.getTransactionReceipt(event.transactionHash);
+            const gasFee = receipt?.effectiveGasPrice
+              ? parseFloat(ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice)))
+              : 0;
+            const donor = event.args?.donor;
+            const campaignId = event.args?.campaignId?.toNumber();
+
+            return {
+              hash: event.transactionHash,
+              from: donor,
+              to: CONTRACT_ADDRESS,
+              campaignId,
+              campaign: campaignMap[campaignId] || `Campaign #${campaignId}`,
+              amount: parseFloat(ethers.utils.formatEther(event.args?.amount || 0)),
+              gasFee,
+              timestamp: block ? new Date(block.timestamp * 1000).toISOString() : new Date().toISOString(),
+              status: receipt?.status === 1 ? 'success' : 'failed',
+              blockNumber: event.blockNumber,
+              type: currentAddress && donor && donor.toLowerCase() === currentAddress.toLowerCase()
+                ? 'sent'
+                : 'received',
+            };
+          })
+        );
+
+        setChainData(transactions);
+        if (onDataLoaded) {
+          onDataLoaded(transactions);
+        }
+      } catch (err) {
+        setChainError(err.message || 'Failed to fetch transactions');
+      } finally {
+        setChainLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [fetchFromChain, CONTRACT_ADDRESS, currentAddress, onDataLoaded]);
+
+  const applyFilters = (items, filterConfig) => {
+    const { searchQuery, activeFilter, dateFrom, dateTo } = filterConfig || {};
+
+    return items.filter((tx) => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (
+          !tx.hash.toLowerCase().includes(query) &&
+          !tx.campaign?.toLowerCase().includes(query) &&
+          !tx.from?.toLowerCase().includes(query) &&
+          !tx.to?.toLowerCase().includes(query)
+        ) {
+          return false;
+        }
+      }
+
+      if (activeFilter && activeFilter !== 'all') {
+        if (activeFilter === 'sent' || activeFilter === 'received') {
+          if (tx.type !== activeFilter) return false;
+        } else if (tx.status !== activeFilter) {
+          return false;
+        }
+      }
+
+      if (dateFrom) {
+        if (new Date(tx.timestamp) < new Date(dateFrom)) return false;
+      }
+      if (dateTo) {
+        if (new Date(tx.timestamp) > new Date(dateTo)) return false;
+      }
+
+      return true;
+    });
+  };
+
+  const sourceData = fetchFromChain ? chainData : data;
+  const filteredData = React.useMemo(() => applyFilters(sourceData, filters), [sourceData, filters]);
 
   // Sort data
   const sortedData = React.useMemo(() => {
-    if (!sortConfig.key) return data;
+    if (!sortConfig.key) return filteredData;
 
-    return [...data].sort((a, b) => {
+    return [...filteredData].sort((a, b) => {
       const aValue = a[sortConfig.key];
       const bValue = b[sortConfig.key];
 
@@ -73,7 +195,7 @@ const TransactionTable = ({
     setCurrentPage(page);
   };
 
-  if (loading) {
+  if (loading || chainLoading) {
     return (
       <div
         style={{
@@ -99,6 +221,24 @@ const TransactionTable = ({
         <div style={{ marginTop: '1rem', color: COLORS.text.secondary }}>
           Loading...
         </div>
+      </div>
+    );
+  }
+
+  if (chainError) {
+    return (
+      <div
+        style={{
+          background: COLORS.glass.medium,
+          backdropFilter: 'blur(20px)',
+          border: `1px solid ${COLORS.border.default}`,
+          borderRadius: '16px',
+          padding: '2rem',
+          textAlign: 'center',
+          color: COLORS.text.secondary,
+        }}
+      >
+        {chainError}
       </div>
     );
   }

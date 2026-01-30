@@ -12,7 +12,8 @@ import {
 import { SiEthereum } from 'react-icons/si';
 import TransactionTable from '../components/TransactionTable';
 import AddressDisplay from '../components/AddressDisplay';
-import { transactionsHistory, formatTxHash, formatDateTime } from '../data/mockData';
+import { formatDateTime } from '../data/mockData';
+import useWallet from '../hooks/useWallet';
 
 /**
  * History Page - Transaction history với filters và table
@@ -85,19 +86,21 @@ const History = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [transactions, setTransactions] = useState([]);
+  const { address } = useWallet();
 
   // Filter tags
   const filterTags = [
-    { id: 'all', label: 'All', count: transactionsHistory.length },
-    { id: 'sent', label: 'Sent', count: transactionsHistory.filter(tx => tx.type === 'sent').length },
-    { id: 'received', label: 'Received', count: transactionsHistory.filter(tx => tx.type === 'received').length },
-    { id: 'pending', label: 'Pending', count: transactionsHistory.filter(tx => tx.status === 'pending').length },
-    { id: 'success', label: 'Success', count: transactionsHistory.filter(tx => tx.status === 'success').length },
-    { id: 'failed', label: 'Failed', count: transactionsHistory.filter(tx => tx.status === 'failed').length },
+    { id: 'all', label: 'All', count: transactions.length },
+    { id: 'sent', label: 'Sent', count: transactions.filter(tx => tx.type === 'sent').length },
+    { id: 'received', label: 'Received', count: transactions.filter(tx => tx.type === 'received').length },
+    { id: 'pending', label: 'Pending', count: transactions.filter(tx => tx.status === 'pending').length },
+    { id: 'success', label: 'Success', count: transactions.filter(tx => tx.status === 'success').length },
+    { id: 'failed', label: 'Failed', count: transactions.filter(tx => tx.status === 'failed').length },
   ];
 
   // Filter transactions
-  const filteredTransactions = transactionsHistory.filter((tx) => {
+  const filteredTransactions = transactions.filter((tx) => {
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -132,11 +135,11 @@ const History = () => {
   });
 
   // Calculate stats
-  const totalDonated = transactionsHistory
+  const totalDonated = transactions
     .filter(tx => tx.type === 'sent' && tx.status === 'success')
     .reduce((sum, tx) => sum + tx.amount, 0);
 
-  const totalTransactions = transactionsHistory.length;
+  const totalTransactions = transactions.length;
 
   // Table columns
   const columns = [
@@ -403,7 +406,19 @@ const History = () => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <TransactionTable data={filteredTransactions} columns={columns} itemsPerPage={10} />
+          <TransactionTable
+            columns={columns}
+            itemsPerPage={10}
+            fetchFromChain
+            currentAddress={address}
+            filters={{
+              searchQuery,
+              activeFilter,
+              dateFrom,
+              dateTo,
+            }}
+            onDataLoaded={setTransactions}
+          />
         </motion.div>
       </div>
     </div>

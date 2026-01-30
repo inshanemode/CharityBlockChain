@@ -1,23 +1,44 @@
 import { useState } from 'react';
-import { campaigns as mockCampaigns } from '../data/mockData';
-// Helper: get campaigns from localStorage if available
-const getCampaigns = () => {
-  try {
-    const stored = localStorage.getItem('campaigns');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
-  return mockCampaigns;
-};
+import { ethers } from 'ethers';
+import CharityABI from '../artifacts/contracts/Charity.sol/Charity.json';
+import { formatAddress } from '../data/mockData';
 
 /**
- * useContract Hook - Mock smart contract interactions
+ * useContract Hook - Real smart contract interactions (Ethers.js)
  * 
  * Features:
  * - Get campaign info
  * - Donate to campaign
- * - Get transaction history
- * - Mock blockchain delays
+ * - Get transaction history from events
  */
+
+const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
+
+const getProvider = () => {
+  if (!window.ethereum) {
+    throw new Error('MetaMask is not installed');
+  }
+  return new ethers.providers.Web3Provider(window.ethereum);
+};
+
+const getContract = (providerOrSigner) => {
+  if (!CONTRACT_ADDRESS) {
+    throw new Error('Contract address is not configured');
+  }
+  return new ethers.Contract(CONTRACT_ADDRESS, CharityABI.abi, providerOrSigner);
+};
+
+const formatCampaign = (campaign) => ({
+  id: campaign.id.toNumber(),
+  title: campaign.name,
+  description: `Campaign by ${formatAddress(campaign.creator)}`,
+  creator: campaign.creator,
+  goal: parseFloat(ethers.utils.formatEther(campaign.goal)),
+  raised: parseFloat(ethers.utils.formatEther(campaign.totalDonations)),
+  isActive: campaign.isActive,
+  status: campaign.isActive ? 'active' : 'closed',
+  contractAddress: CONTRACT_ADDRESS,
+});
 
 const useContract = () => {
   const [loading, setLoading] = useState(false);
@@ -29,19 +50,22 @@ const useContract = () => {
     setError(null);
 
     try {
-      // Simulate blockchain read delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      if (!campaignId) {
+        throw new Error('Campaign ID required');
+      }
 
-      const campaign = getCampaigns().find(c => c.id === campaignId);
-      
-      if (!campaign) {
+      const provider = getProvider();
+      const contract = getContract(provider);
+      const campaign = await contract.campaigns(campaignId);
+
+      if (!campaign || campaign.id.toNumber() === 0) {
         throw new Error('Campaign not found');
       }
 
       setLoading(false);
       return {
         success: true,
-        data: campaign,
+        data: formatCampaign(campaign),
       };
     } catch (err) {
       setError(err.message);
@@ -54,12 +78,11 @@ const useContract = () => {
   };
 
   // Donate to campaign - Main transaction function
-  const donate = async ({ campaignId, amount, message, gasSpeed = 'normal' }) => {
+  const donate = async ({ campaignId, amount }) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Validate inputs
       if (!campaignId) {
         throw new Error('Campaign ID required');
       }
@@ -67,50 +90,19 @@ const useContract = () => {
         throw new Error('Invalid donation amount');
       }
 
-      // Get campaign
-      const campaign = getCampaigns().find(c => c.id === campaignId);
-      if (!campaign) {
-        throw new Error('Campaign not found');
-      }
+      const provider = getProvider();
+      const signer = provider.getSigner();
+      const contract = getContract(signer);
 
-      // Calculate gas fee based on speed
-      const gasFees = {
-        slow: 0.001,
-        normal: 0.002,
-        fast: 0.004,
-      };
-      const gasFee = gasFees[gasSpeed] || gasFees.normal;
-
-      // Simulate transaction mining delay
-      const miningTimes = {
-        slow: 5000,   // 5 seconds
-        normal: 3000, // 3 seconds
-        fast: 1500,   // 1.5 seconds
-      };
-      await new Promise(resolve => setTimeout(resolve, miningTimes[gasSpeed] || 3000));
-
-      // Generate mock transaction result
-      const txHash = generateMockTxHash();
-      const blockNumber = Math.floor(Math.random() * 1000000) + 18000000;
-      const timestamp = new Date().toISOString();
-
-      // Create transaction receipt
-      const receipt = {
-        success: true,
-        txHash,
-        blockNumber,
-        campaignId,
-        campaignTitle: campaign.title,
-        amount,
-        gasFee,
-        total: amount + gasFee,
-        message: message || '',
-        timestamp,
-        status: 'confirmed',
-      };
+      const txResponse = await contract.donate(campaignId, {
+        value: ethers.utils.parseEther(amount.toString()),
+      });
 
       setLoading(false);
-      return receipt;
+      return {
+        success: true,
+        txResponse,
+      };
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -127,16 +119,38 @@ const useContract = () => {
     setError(null);
 
     try {
-      // Simulate blockchain read delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const provider = getProvider();
+      const contract = getContract(provider);
 
-      // Mock transactions data
-      const mockTransactions = generateMockTransactions(campaignId);
+      const currentBlock = await provider.getBlockNumber();
+      const fromBlock = Math.max(currentBlock - 5000, 0);
+      const events = await contract.queryFilter(contract.filters.DonationReceived(), fromBlock, 'latest');
+      const filteredEvents = events.filter((event) => event.args?.campaignId?.toNumber() === Number(campaignId));
+
+      const transactions = await Promise.all(
+        filteredEvents.map(async (event) => {
+          const block = await provider.getBlock(event.blockNumber);
+          const receipt = await provider.getTransactionReceipt(event.transactionHash);
+          const gasFee = receipt && receipt.effectiveGasPrice
+            ? parseFloat(ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice)))
+            : 0;
+
+          return {
+            hash: event.transactionHash,
+            from: event.args?.donor,
+            amount: parseFloat(ethers.utils.formatEther(event.args?.amount || 0)),
+            timestamp: block ? new Date(block.timestamp * 1000).toISOString() : new Date().toISOString(),
+            status: receipt?.status === 1 ? 'success' : 'failed',
+            blockNumber: event.blockNumber,
+            gasFee,
+          };
+        })
+      );
 
       setLoading(false);
       return {
         success: true,
-        data: mockTransactions,
+        data: transactions,
       };
     } catch (err) {
       setError(err.message);
@@ -154,13 +168,23 @@ const useContract = () => {
     setError(null);
 
     try {
-      // Simulate blockchain read delay
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      const provider = getProvider();
+      const contract = getContract(provider);
+      const campaignCount = await contract.campaignCount();
+      const count = campaignCount.toNumber();
+
+      const campaigns = [];
+      for (let i = 1; i <= count; i++) {
+        const campaign = await contract.campaigns(i);
+        if (campaign && campaign.id.toNumber() > 0) {
+          campaigns.push(formatCampaign(campaign));
+        }
+      }
 
       setLoading(false);
       return {
         success: true,
-        data: getCampaigns(),
+        data: campaigns,
       };
     } catch (err) {
       setError(err.message);
@@ -172,27 +196,19 @@ const useContract = () => {
     }
   };
 
-  // Estimate gas fee
-  const estimateGas = async (amount, gasSpeed = 'normal') => {
-    // Simulate estimation delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const baseFees = {
-      slow: 0.001,
-      normal: 0.002,
-      fast: 0.004,
-    };
-
-    const estimatedTimes = {
-      slow: '~5 mins',
-      normal: '~2 mins',
-      fast: '~30 secs',
-    };
-
+  // Estimate gas fee for donation
+  const estimateGas = async ({ campaignId, amount }) => {
+    const provider = getProvider();
+    const signer = provider.getSigner();
+    const contract = getContract(signer);
+    const gasEstimate = await contract.estimateGas.donate(campaignId, {
+      value: ethers.utils.parseEther(amount.toString()),
+    });
+    const feeData = await provider.getFeeData();
+    const gasFeeWei = gasEstimate.mul(feeData.maxFeePerGas || feeData.gasPrice || 0);
     return {
-      fee: baseFees[gasSpeed] || baseFees.normal,
-      time: estimatedTimes[gasSpeed] || estimatedTimes.normal,
-      speed: gasSpeed,
+      gasLimit: gasEstimate.toString(),
+      fee: parseFloat(ethers.utils.formatEther(gasFeeWei)),
     };
   };
 
@@ -205,44 +221,6 @@ const useContract = () => {
     getAllCampaigns,
     estimateGas,
   };
-};
-
-// Helper: Generate mock transaction hash
-const generateMockTxHash = () => {
-  const chars = '0123456789abcdef';
-  let hash = '0x';
-  for (let i = 0; i < 64; i++) {
-    hash += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return hash;
-};
-
-// Helper: Generate mock transactions for a campaign
-const generateMockTransactions = (campaignId) => {
-  const count = Math.floor(Math.random() * 5) + 3; // 3-7 transactions
-  const transactions = [];
-
-  for (let i = 0; i < count; i++) {
-    transactions.push({
-      hash: generateMockTxHash(),
-      from: generateMockAddress(),
-      amount: parseFloat((Math.random() * 2 + 0.01).toFixed(4)),
-      timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'confirmed',
-    });
-  }
-
-  return transactions;
-};
-
-// Helper: Generate mock address
-const generateMockAddress = () => {
-  const chars = '0123456789abcdef';
-  let address = '0x';
-  for (let i = 0; i < 40; i++) {
-    address += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return address;
 };
 
 export default useContract;

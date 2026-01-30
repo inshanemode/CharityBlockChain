@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ethers } from 'ethers';
 import {
   IoCheckmarkCircle,
   IoWalletOutline,
@@ -11,18 +12,10 @@ import {
 import { SiEthereum } from 'react-icons/si';
 import GasFeeDisplay from '../components/GasFeeDisplay';
 import TransactionStatus from '../components/TransactionStatus';
+import GlassButton from '../components/base/GlassButton';
 import useWallet from '../hooks/useWallet';
 import useContract from '../hooks/useContract';
-import { campaigns as mockCampaigns, formatAddress } from '../data/mockData';
-
-// Lấy danh sách campaigns từ localStorage nếu có, nếu không thì lấy từ mockData
-const getCampaigns = () => {
-  try {
-    const stored = localStorage.getItem('campaigns');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
-  return mockCampaigns;
-};
+import { formatAddress } from '../data/mockData';
 const useCampaignIdFromQuery = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -104,10 +97,13 @@ const Donate = () => {
   const navigate = useNavigate();
   const campaignId = useCampaignIdFromQuery();
   const { isConnected, address, balance, isConnecting, connectWallet, disconnectWallet } = useWallet();
-  const { donate, loading: contractLoading } = useContract();
+  const { donate, getAllCampaigns, loading: contractLoading } = useContract();
 
   // Form state
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [campaigns, setCampaigns] = useState([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
+  const [campaignsError, setCampaignsError] = useState(null);
   const [amount, setAmount] = useState('');
   const [gasSpeed, setGasSpeed] = useState('normal');
   const [message, setMessage] = useState('');
@@ -116,6 +112,7 @@ const Donate = () => {
   // Transaction state
   const [isSending, setIsSending] = useState(false);
   const [txStatus, setTxStatus] = useState(null); // pending | confirming | success | failed
+  const [txHash, setTxHash] = useState('');
 
   // Quick amount presets
   const quickAmounts = [
@@ -136,6 +133,34 @@ const Donate = () => {
   const handleQuickAmount = (value) => {
     setAmount(value.toString());
   };
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setCampaignsLoading(true);
+        setCampaignsError(null);
+        const response = await getAllCampaigns();
+        if (!response.success) {
+          throw new Error(response.error || 'Failed to load campaigns');
+        }
+        setCampaigns(response.data);
+      } catch (err) {
+        setCampaignsError(err.message);
+      } finally {
+        setCampaignsLoading(false);
+      }
+    };
+
+    fetchCampaigns();
+  }, [getAllCampaigns]);
+
+  useEffect(() => {
+    if (!campaignId || campaigns.length === 0) return;
+    const matched = campaigns.find((campaign) => String(campaign.id) === String(campaignId));
+    if (matched) {
+      setSelectedCampaign(matched);
+    }
+  }, [campaignId, campaigns]);
 
   // Calculate total
   const gasFees = {
@@ -172,49 +197,50 @@ const Donate = () => {
 
     setIsSending(true);
     setTxStatus('pending');
+    setTxHash('');
 
     try {
-      // Send transaction
       const result = await donate({
         campaignId: selectedCampaign.id,
         amount: parseFloat(amount),
-        message,
-        gasSpeed,
       });
 
-      if (result.success) {
-        setTxStatus('success');
-        // Update raised amount in localStorage
-        try {
-          const stored = localStorage.getItem('campaigns');
-          let campaigns = stored ? JSON.parse(stored) : [];
-          campaigns = campaigns.map(c =>
-            c.id === selectedCampaign.id
-              ? { ...c, raised: (parseFloat(c.raised || 0) + parseFloat(amount)) }
-              : c
-          );
-          localStorage.setItem('campaigns', JSON.stringify(campaigns));
-        } catch (e) {}
-        // Navigate to success page sau 1 giây
-        setTimeout(() => {
-          navigate('/success', { 
-            state: { 
-              transaction: result,
-              campaign: selectedCampaign,
-            } 
-          });
-        }, 1500);
-      } else {
-        setTxStatus('failed');
+      if (!result.success) {
+        throw new Error(result.error || 'Transaction failed');
       }
+
+      setTxHash(result.txResponse.hash);
+      setTxStatus('confirming');
+
+      const receipt = await result.txResponse.wait();
+      if (receipt.status !== 1) {
+        throw new Error('Transaction failed');
+      }
+
+      const gasFee = receipt.effectiveGasPrice
+        ? parseFloat(ethers.utils.formatEther(receipt.gasUsed.mul(receipt.effectiveGasPrice)))
+        : 0;
+
+      const transaction = {
+        hash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        amount: parseFloat(amount),
+        gasFee,
+        timestamp: new Date().toISOString(),
+      };
+
+      setTxStatus('success');
+      navigate('/success', { 
+        state: { 
+          transaction,
+          campaign: selectedCampaign,
+        } 
+      });
     } catch (error) {
       console.error('Transaction error:', error);
       setTxStatus('failed');
     } finally {
-      setTimeout(() => {
-        setIsSending(false);
-        setTxStatus(null);
-      }, 2000);
+      setIsSending(false);
     }
   };
 
@@ -375,7 +401,13 @@ const Donate = () => {
             >
               <label style={labelStyle}>Chọn chiến dịch</label>
               <div style={{ display: 'grid', gap: '12px', maxHeight: '320px', overflowY: 'auto' }}>
-                {getCampaigns()
+                {campaignsLoading && (
+                  <div style={{ color: '#6b7280', fontSize: '0.95rem' }}>Loading campaigns...</div>
+                )}
+                {campaignsError && (
+                  <div style={{ color: '#b91c1c', fontSize: '0.95rem' }}>{campaignsError}</div>
+                )}
+                {campaigns
                   .filter((c) => c.status === 'active')
                   .map((campaign) => (
                     <button
@@ -408,11 +440,29 @@ const Donate = () => {
                           : '0 8px 24px rgba(15, 23, 42, 0.06)';
                       }}
                     >
-                      <img
-                        src={campaign.image}
-                        alt={campaign.title}
-                        style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '10px' }}
-                      />
+                      {campaign.image ? (
+                        <img
+                          src={campaign.image}
+                          alt={campaign.title}
+                          style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '10px' }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '10px',
+                            background: 'linear-gradient(135deg, rgba(17,24,39,0.9), rgba(59,130,246,0.6))',
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {campaign.title?.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, color: '#111827', marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
                           {campaign.title}
@@ -516,24 +566,15 @@ const Donate = () => {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-              <button
-                style={{ ...glassButtonStyle, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: isSending ? 0.7 : 1 }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.7)';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 14px 36px rgba(15,23,42,0.1)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.5)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 10px 28px rgba(15,23,42,0.06)';
-                }}
+              <GlassButton
+                style={{ ...glassButtonStyle, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 onClick={handleSendTransaction}
                 disabled={!selectedCampaign || !amount || parseFloat(amount) <= 0 || isSending || contractLoading}
+                loading={isSending || contractLoading}
+                icon={<IoSend size={20} />}
               >
-                <IoSend size={20} />
-                {isSending ? 'Đang gửi...' : 'Gửi Transaction'}
-              </button>
+                Gửi Transaction
+              </GlassButton>
             </motion.div>
           </>
         )}
@@ -556,8 +597,22 @@ const Donate = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div style={{ width: '100%', maxWidth: '460px' }}>
-                <TransactionStatus status={txStatus} />
+              onClick={() => {
+                if (txStatus === 'failed') {
+                  setTxStatus(null);
+                }
+              }}
+            >
+              <div style={{ width: '100%', maxWidth: '460px' }} onClick={(e) => e.stopPropagation()}>
+                <TransactionStatus
+                  status={txStatus}
+                  txHash={txHash}
+                  steps={[
+                    { completed: txStatus !== 'pending', active: txStatus === 'pending' },
+                    { completed: txStatus === 'success', active: txStatus === 'confirming' },
+                    { completed: txStatus === 'success', active: txStatus === 'success' },
+                  ]}
+                />
               </div>
             </motion.div>
           )}

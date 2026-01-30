@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { IoWalletOutline, IoSend, IoSwapHorizontal } from 'react-icons/io5';
 import { SiEthereum } from 'react-icons/si';
 import AddressDisplay from '../components/AddressDisplay';
 import useWallet from '../hooks/useWallet';
-import { transactionsHistory, nftBadges } from '../data/mockData';
+import { ethers } from 'ethers';
+import CharityABI from '../artifacts/contracts/Charity.sol/Charity.json';
+import { nftBadges } from '../data/mockData';
 
 /**
  * MyWallet Page - Wallet management với profile, badges, stats
@@ -50,13 +52,81 @@ const MyWallet = () => {
   const navigate = useNavigate();
   const { isConnected, address, balance, connectWallet } = useWallet();
   const [copied, setCopied] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Mock user data
+  const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
+
+  useEffect(() => {
+    const fetchUserTransactions = async () => {
+      if (!address) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (!window.ethereum) {
+          throw new Error('MetaMask is not installed');
+        }
+        if (!CONTRACT_ADDRESS) {
+          throw new Error('Contract address is not configured');
+        }
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CharityABI.abi, provider);
+        const currentBlock = await provider.getBlockNumber();
+        const fromBlock = Math.max(currentBlock - 10000, 0);
+        const events = await contract.queryFilter(contract.filters.DonationReceived(), fromBlock, 'latest');
+
+        const campaignIds = new Set(events.map((event) => event.args?.campaignId?.toNumber()));
+        const campaignMap = {};
+        await Promise.all(
+          Array.from(campaignIds).map(async (campaignId) => {
+            if (!campaignId) return;
+            const campaign = await contract.campaigns(campaignId);
+            campaignMap[campaignId] = campaign?.name || `Campaign #${campaignId}`;
+          })
+        );
+
+        const userTransactions = await Promise.all(
+          events
+            .filter((event) => event.args?.donor?.toLowerCase() === address.toLowerCase())
+            .map(async (event) => {
+              const block = await provider.getBlock(event.blockNumber);
+              return {
+                hash: event.transactionHash,
+                campaign: campaignMap[event.args?.campaignId?.toNumber()] || `Campaign #${event.args?.campaignId?.toNumber()}`,
+                amount: parseFloat(ethers.utils.formatEther(event.args?.amount || 0)),
+                timestamp: block ? new Date(block.timestamp * 1000).toISOString() : new Date().toISOString(),
+                status: 'success',
+                type: 'sent',
+              };
+            })
+        );
+
+        setTransactions(userTransactions.reverse());
+      } catch (err) {
+        console.error('Wallet fetch error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserTransactions();
+  }, [address]);
+
+  const totalDonated = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+  const totalTransactions = transactions.length;
+  const impactScore = Math.round(totalDonated * 100);
+  const globalRanking = totalDonated > 0 ? Math.max(1, Math.floor(10000 / totalDonated)) : 0;
+
   const userStats = {
-    totalDonated: 45.67,
-    totalTransactions: 18,
-    impactScore: 8750,
-    globalRanking: 123,
+    totalDonated,
+    totalTransactions,
+    impactScore,
+    globalRanking,
   };
 
   const handleCopy = () => {
@@ -194,7 +264,13 @@ const MyWallet = () => {
         <h2 style={{ fontSize: '1.4rem', fontWeight: 600, color: '#111827', marginBottom: '14px' }}>Recent Activity</h2>
         <div style={{ ...cardStyle, padding: '20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {transactionsHistory.slice(0, 5).map((tx, index) => (
+            {error && (
+              <div style={{ color: '#b91c1c' }}>{error}</div>
+            )}
+            {loading && (
+              <div style={{ color: '#6b7280' }}>Loading transactions...</div>
+            )}
+            {transactions.slice(0, 5).map((tx, index) => (
               <div key={tx.hash} style={{ display: 'flex', gap: '12px', position: 'relative', paddingBottom: index < 4 ? '14px' : 0, borderBottom: index < 4 ? '1px solid #e5e7eb' : 'none' }}>
                 <div style={{ position: 'relative', paddingTop: '4px' }}>
                   <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: tx.status === 'success' ? '#22c55e' : '#f59e0b' }} />
